@@ -2,10 +2,14 @@ package main
 
 import (
 	"avito/handler"
+	"avito/repository"
+	"avito/service"
 	"context"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 type Server struct {
@@ -29,10 +33,20 @@ func (s *Server) Shutdown(ctx context.Context) error {
 }
 
 func main() {
-	handlers := new(handler.Handler)
-	server := new(Server)
-	err := server.Run("8000", handlers.InitRoutes())
-	if err != nil {
-		log.Fatalf("[Http Server Error] &s", err.Error())
+	if err := initConfig(); err != nil {
+		log.Fatalf("[Config Error] Initialization error: %s", err.Error())
 	}
+	repos := repository.NewRepository()
+	services := service.NewService(repos)
+	handlers := handler.NewHandler(services)
+
+	server := new(Server)
+	if err := server.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
+		log.Fatalf("[Http Server Error] %s", err.Error())
+	}
+}
+
+func initConfig() error {
+	viper.SetConfigFile(".env")
+	return viper.ReadInConfig()
 }

@@ -3,12 +3,13 @@ services:
   db:
     image: postgres:15
     container_name: avito_db
-    restart: always
     ports:
-      - 5432:5432
+      - 5434:5432
+    restart: always
     env_file:
       - .env
-#    volumes:
+    volumes:
+      - ./chema/init.sql:/docker-entrypoint-initdb.d/init.sql
 #      - db_data:/var/lib/postgresql/data
 
   server:
@@ -16,8 +17,10 @@ services:
       context: .
     container_name: avito_service
     ports:
-      - 8080:8080
+      - 8000:8000
     restart: always
+    env_file:
+      - .env
     depends_on:
       - db
 #    volumes:
