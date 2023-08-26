@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/lib/pq"
+
 	"github.com/spf13/viper"
 )
 
@@ -36,7 +38,21 @@ func main() {
 	if err := initConfig(); err != nil {
 		log.Fatalf("[Config Error] Initialization error: %s", err.Error())
 	}
-	repos := repository.NewRepository()
+
+	db, err := repository.NewPostgresDB(repository.Config{
+		Name:     viper.GetString("POSTGRES_DB"),
+		Host:     viper.GetString("POSTGRES_HOST"),
+		Port:     viper.GetString("POSTGRES_PORT"),
+		Username: viper.GetString("POSTGRES_USER"),
+		Password: viper.GetString("POSTGRES_PASSWORD"),
+		SSLMode:  viper.GetString("POSTGRES_SSLMODE"),
+	})
+
+	if err != nil {
+		log.Fatalf("[DB ERROR] %s", err.Error())
+	}
+
+	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
 	handlers := handler.NewHandler(services)
 
