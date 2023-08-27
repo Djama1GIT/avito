@@ -1,17 +1,16 @@
 CREATE TABLE segments
 (
-    id serial PRIMARY KEY,
-    slug varchar(255) UNIQUE
+    slug varchar(255) PRIMARY KEY
 );
 
 CREATE TABLE users
 (
-    id serial PRIMARY KEY
+    id integer PRIMARY KEY
 );
 
 CREATE TABLE user_segments
 (
     user_id integer REFERENCES users(id),
-    segment_id integer REFERENCES segments(id),
-    PRIMARY KEY (user_id, segment_id)
+    segment varchar(255) REFERENCES segments(slug),
+    PRIMARY KEY (user_id, segment)
 );
