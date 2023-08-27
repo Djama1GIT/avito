@@ -2,7 +2,7 @@ package handler
 
 import (
 	"avito/pkg/structures"
-	"avito/utils"
+	"avito/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
