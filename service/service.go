@@ -7,6 +7,7 @@ import (
 
 type Segment interface {
 	Create(segment structures.Segment) (string, error)
+	Delete(segment structures.Segment) (string, error)
 }
 
 type UserSegments interface {
