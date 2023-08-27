@@ -1,9 +1,9 @@
 package main
 
 import (
-	"avito/handler"
-	"avito/repository"
-	"avito/service"
+	"avito/pkg/handler"
+	"avito/pkg/repository"
+	"avito/pkg/service"
 	"context"
 	"log"
 	"net/http"

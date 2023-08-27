@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"avito/structures"
+	"avito/pkg/structures"
 
 	"github.com/jmoiron/sqlx"
 )

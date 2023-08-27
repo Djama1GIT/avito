@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"avito/service"
+	"avito/pkg/service"
 
 	"github.com/gin-gonic/gin"
 )

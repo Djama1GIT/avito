@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"avito/structures"
+	"avito/pkg/structures"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -45,7 +45,7 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 func (r *UserSegmentsDB) GetUsersInSegment(user structures.User) ([]string, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
 	var slugs []string
@@ -53,7 +53,7 @@ func (r *UserSegmentsDB) GetUsersInSegment(user structures.User) ([]string, erro
 	rows, err := tx.Query(createSegmentQuery, user.Id)
 	if err != nil {
 		tx.Rollback()
-		return []string{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -61,15 +61,19 @@ func (r *UserSegmentsDB) GetUsersInSegment(user structures.User) ([]string, erro
 		var slug string
 		if err := rows.Scan(&slug); err != nil {
 			tx.Rollback()
-			return []string{}, err
+			return nil, err
 		}
 		slugs = append(slugs, slug)
 	}
 
 	if err := rows.Err(); err != nil {
 		tx.Rollback()
-		return []string{}, err
+		return nil, err
 	}
 
-	return slugs, tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return slugs, nil
 }

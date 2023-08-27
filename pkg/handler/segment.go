@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"avito/structures"
+	"avito/pkg/structures"
 	"avito/utils"
 	"net/http"
 

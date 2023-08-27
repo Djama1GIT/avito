@@ -1,8 +1,8 @@
 package service
 
 import (
-	"avito/repository"
-	"avito/structures"
+	"avito/pkg/repository"
+	"avito/pkg/structures"
 )
 
 type SegmentService struct {

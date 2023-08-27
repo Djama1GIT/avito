@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"avito/structures"
+	"avito/pkg/structures"
 	"avito/utils"
 	"net/http"
 
@@ -53,6 +53,10 @@ func (h *Handler) getUsersInSegment(c *gin.Context) {
 	if err != nil {
 		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	if segments == nil {
+		segments = []string{}
 	}
 
 	c.JSON(http.StatusOK, map[string]interface{}{
