@@ -2,8 +2,8 @@ package handler
 
 import (
 	"avito/structures"
+	"avito/utils"
 	"net/http"
-	"regexp"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,9 +16,8 @@ func (h *Handler) createSegment(c *gin.Context) {
 		return
 	}
 
-	match, _ := regexp.MatchString("^[a-z0-9]+(?:[-_][a-z0-9]+)*$", input.Slug)
-	if !match {
-		NewErrorResponse(c, http.StatusBadRequest, "Invalid slug")
+	if err := utils.ValidateSlug(input.Slug); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -41,9 +40,8 @@ func (h *Handler) deleteSegment(c *gin.Context) {
 		return
 	}
 
-	match, _ := regexp.MatchString("^[a-z0-9]+(?:[-_][a-z0-9]+)*$", input.Slug)
-	if !match {
-		NewErrorResponse(c, http.StatusBadRequest, "Invalid slug")
+	if err := utils.ValidateSlug(input.Slug); err != nil {
+		NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -56,12 +54,4 @@ func (h *Handler) deleteSegment(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"slug": slug,
 	})
-}
-
-func (h *Handler) patchSegment(c *gin.Context) {
-
-}
-
-func (h *Handler) getUsersInSegment(c *gin.Context) {
-
 }

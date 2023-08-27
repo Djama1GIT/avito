@@ -13,10 +13,10 @@ func NewSegmentService(repo repository.Segment) *SegmentService {
 	return &SegmentService{repo: repo}
 }
 
-func (s *SegmentService) Create(Segment structures.Segment) (string, error) {
-	return s.repo.Create(Segment)
+func (s *SegmentService) Create(segment structures.Segment) (string, error) {
+	return s.repo.Create(segment)
 }
 
-func (s *SegmentService) Delete(Segment structures.Segment) (string, error) {
-	return s.repo.Delete(Segment)
+func (s *SegmentService) Delete(segment structures.Segment) (string, error) {
+	return s.repo.Delete(segment)
 }

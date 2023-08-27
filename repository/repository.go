@@ -12,7 +12,8 @@ type Segment interface {
 }
 
 type UserSegments interface {
-	Create(segment structures.Segment, user structures.User) (string, error)
+	Patch(userSegments structures.UserSegments) (int, error)
+	GetUsersInSegment(user structures.User) ([]string, error)
 }
 
 type Repository struct {

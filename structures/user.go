@@ -1,5 +1,5 @@
 package structures
 
 type User struct {
-	Id int `json:"-" binding:"required"`
+	Id int `json:"user_id" binding:"required"`
 }

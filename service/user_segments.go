@@ -13,6 +13,10 @@ func NewUserSegmentsService(repo repository.UserSegments) *UserSegmentsService {
 	return &UserSegmentsService{repo: repo}
 }
 
-func (s *UserSegmentsService) Create(Segment structures.Segment, user structures.User) (string, error) {
-	return s.repo.Create(Segment, user)
+func (s *UserSegmentsService) Patch(userSegments structures.UserSegments) (int, error) {
+	return s.repo.Patch(userSegments)
+}
+
+func (s *UserSegmentsService) GetUsersInSegment(user structures.User) ([]string, error) {
+	return s.repo.GetUsersInSegment(user)
 }
