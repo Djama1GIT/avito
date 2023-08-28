@@ -26,7 +26,7 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 		_, err = tx.Exec(createSegmentQuery, userSegments.UserId, segment)
 		if err != nil {
 			tx.Rollback()
-			return -1, err
+			return -1, fmt.Errorf("error occurred while processing segment to add '%s': %v", segment, err)
 		}
 	}
 
@@ -35,7 +35,7 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 		_, err = tx.Exec(deleteSegmentQuery, userSegments.UserId, segment)
 		if err != nil {
 			tx.Rollback()
-			return -1, err
+			return -1, fmt.Errorf("error occurred while processing segment to delete '%s': %v", segment, err)
 		}
 	}
 

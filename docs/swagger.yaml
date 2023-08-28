@@ -1,0 +1,187 @@
+basePath: /api/
+definitions:
+  handler.errorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  structures.Segment:
+    properties:
+      slug:
+        type: string
+    required:
+    - slug
+    type: object
+  structures.UserSegments:
+    properties:
+      segments_to_add:
+        items:
+          type: string
+        type: array
+      segments_to_delete:
+        items:
+          type: string
+        type: array
+      user_id:
+        type: integer
+    required:
+    - segments_to_add
+    - segments_to_delete
+    - user_id
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: mail@dj.ama1.ru
+    name: GADJIIAVOV DJAMAL
+    url: https://dj.ama1.ru
+  title: Avito Test Assignment
+  version: "1.0"
+paths:
+  /segments/:
+    delete:
+      consumes:
+      - application/json
+      operationId: delete-segment
+      parameters:
+      - description: Slug of segment
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/structures.Segment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Delete Segment
+      tags:
+      - segment
+    get:
+      operationId: get-users-in-segment
+      parameters:
+      - description: User data
+        in: query
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Get Users In Segment
+      tags:
+      - user-segments
+    patch:
+      consumes:
+      - application/json
+      operationId: patch-segment
+      parameters:
+      - description: Patch data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/structures.UserSegments'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Patch Segment
+      tags:
+      - user-segments
+    post:
+      consumes:
+      - application/json
+      operationId: create-segment
+      parameters:
+      - description: Slug of segment
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/structures.Segment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Create Segment
+      tags:
+      - segment
+swagger: "2.0"

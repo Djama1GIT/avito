@@ -8,6 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary Create Segment
+// @Tags segment
+// @ID create-segment
+// @Accept  json
+// @Produce  json
+// @Param input body structures.Segment true "Slug of segment"
+// @Success 200 {integer} integer 1
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /segments/ [post]
 func (h *Handler) createSegment(c *gin.Context) {
 	var input structures.Segment
 
@@ -32,6 +43,17 @@ func (h *Handler) createSegment(c *gin.Context) {
 	})
 }
 
+// @Summary Delete Segment
+// @Tags segment
+// @ID delete-segment
+// @Accept  json
+// @Produce  json
+// @Param input body structures.Segment true "Slug of segment"
+// @Success 200 {integer} integer 1
+// @Failure 400,404 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /segments/ [delete]
 func (h *Handler) deleteSegment(c *gin.Context) {
 	var input structures.Segment
 
