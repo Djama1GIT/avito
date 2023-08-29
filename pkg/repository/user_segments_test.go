@@ -42,6 +42,9 @@ func TestUserSegments_Patch(t *testing.T) {
 					mock.ExpectExec("INSERT").
 						WithArgs(userSegments.UserId, segment).
 						WillReturnResult(sqlmock.NewResult(0, 1))
+					mock.ExpectQuery("INSERT").
+						WithArgs(1, segment, true).
+						WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow(1))
 				}
 
 				mock.ExpectCommit()
@@ -70,6 +73,9 @@ func TestUserSegments_Patch(t *testing.T) {
 					mock.ExpectExec("DELETE").
 						WithArgs(userSegments.UserId, segment).
 						WillReturnResult(sqlmock.NewResult(0, 1))
+					mock.ExpectQuery("INSERT").
+						WithArgs(1, segment, false).
+						WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow(1))
 				}
 
 				mock.ExpectCommit()
@@ -205,6 +211,65 @@ func TestUserSegments_Patch(t *testing.T) {
 			wantErr:     true,
 			expectError: "error occurred while checking segment to delete existence 'segment1': existance select error",
 		},
+		{
+			name: "AddSegments_HistoryError",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				for _, segment := range userSegments.SegmentsToAdd {
+					mock.ExpectExec("INSERT").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnResult(sqlmock.NewResult(0, 1))
+					mock.ExpectQuery("INSERT").
+						WithArgs(1, segment, true).
+						WillReturnError(errors.New("history error"))
+					break
+				}
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:           1,
+					SegmentsToAdd:    []string{"segment1", "segment2"},
+					SegmentsToDelete: nil,
+				},
+			},
+			wantUserID:  -1,
+			wantErr:     true,
+			expectError: "history error",
+		},
+		{
+			name: "DeleteSegments_HistoryError",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				for _, segment := range userSegments.SegmentsToDelete {
+					mock.ExpectQuery("SELECT").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
+
+					mock.ExpectExec("DELETE").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnResult(sqlmock.NewResult(0, 1))
+					mock.ExpectQuery("INSERT").
+						WithArgs(1, segment, false).
+						WillReturnError(errors.New("history error"))
+				}
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:           1,
+					SegmentsToAdd:    nil,
+					SegmentsToDelete: []string{"segment1", "segment2"},
+				},
+			},
+			wantUserID:  -1,
+			wantErr:     true,
+			expectError: "history error",
+		},
 	}
 
 	for _, testCase := range tests {
@@ -223,7 +288,7 @@ func TestUserSegments_Patch(t *testing.T) {
 	}
 }
 
-func TestUserSegments_GetUsersInSegment(t *testing.T) {
+func TestUserSegments_GetUserSegments(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
@@ -402,9 +467,202 @@ func TestUserSegments_GetUsersInSegment(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			testCase.mockBehavior(testCase.args, testCase.args.User)
 
-			gotSlugs, err := repo.GetUsersInSegment(testCase.args.User)
+			gotSlugs, err := repo.GetUserSegments(testCase.args.User)
 
 			assert.Equal(t, testCase.wantSlugs, gotSlugs)
+
+			if testCase.wantErr {
+				assert.Error(t, err)
+				assert.EqualError(t, err, testCase.expectError)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUserSegments_GetSegmentUsers(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	repo := repository.NewUserSegmentsDB(db)
+
+	type args struct {
+		Segment structures.Segment
+	}
+
+	type mockBehavior func(args args, segment structures.Segment)
+
+	tests := []struct {
+		name         string
+		mockBehavior mockBehavior
+		args         args
+		wantUsers    []int
+		wantErr      bool
+		expectError  string
+	}{
+		{
+			name: "GetSegmentUsers_Success",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin()
+
+				rows := sqlmock.NewRows([]string{"user"}).
+					AddRow(1).
+					AddRow(2)
+
+				mock.ExpectQuery("SELECT user_id").
+					WithArgs(segment.Slug).
+					WillReturnRows(rows)
+
+				mock.ExpectCommit()
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   []int{1, 2},
+			wantErr:     false,
+			expectError: "",
+		},
+		{
+			name: "GetUsersInSegment_NoRows",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin()
+
+				rows := sqlmock.NewRows([]string{"segment"})
+
+				mock.ExpectQuery("SELECT user_id").
+					WithArgs(segment.Slug).
+					WillReturnRows(rows)
+
+				mock.ExpectCommit()
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   nil,
+			wantErr:     false,
+			expectError: "",
+		},
+		{
+			name: "TransactionError",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin().WillReturnError(errors.New("transaction error"))
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   nil,
+			wantErr:     true,
+			expectError: "transaction error",
+		},
+		{
+			name: "QueryError",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin()
+
+				mock.ExpectQuery("SELECT user_id").
+					WithArgs(segment.Slug).
+					WillReturnError(errors.New("query error"))
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   nil,
+			wantErr:     true,
+			expectError: "query error",
+		},
+		{
+			name: "RowsScanError",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin()
+
+				rows := sqlmock.NewRows([]string{"segment"}).
+					AddRow(nil)
+
+				mock.ExpectQuery("SELECT user_id").
+					WithArgs(segment.Slug).
+					WillReturnRows(rows)
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   nil,
+			wantErr:     true,
+			expectError: "sql: Scan error on column index 0, name \"segment\": converting NULL to int is unsupported",
+		},
+		{
+			name: "RowsError",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin()
+
+				rows := sqlmock.NewRows([]string{"segment"}).
+					AddRow(nil).RowError(0, errors.New("Row error"))
+
+				mock.ExpectQuery("SELECT user_id").
+					WithArgs(segment.Slug).
+					WillReturnRows(rows)
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   nil,
+			wantErr:     true,
+			expectError: "Row error",
+		},
+		{
+			name: "CommitError",
+			mockBehavior: func(args args, segment structures.Segment) {
+				mock.ExpectBegin()
+
+				rows := sqlmock.NewRows([]string{"segment"}).
+					AddRow(1).
+					AddRow(2)
+
+				mock.ExpectQuery("SELECT user_id").
+					WithArgs(segment.Slug).
+					WillReturnRows(rows)
+
+				mock.ExpectCommit().WillReturnError(errors.New("Commit error"))
+			},
+			args: args{
+				Segment: structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantUsers:   nil,
+			wantErr:     true,
+			expectError: "Commit error",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testCase.mockBehavior(testCase.args, testCase.args.Segment)
+
+			gotSlugs, err := repo.GetSegmentUsers(testCase.args.Segment)
+
+			assert.Equal(t, testCase.wantUsers, gotSlugs)
 
 			if testCase.wantErr {
 				assert.Error(t, err)

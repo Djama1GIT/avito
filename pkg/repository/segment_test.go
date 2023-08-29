@@ -3,7 +3,6 @@ package repository_test
 import (
 	"avito/pkg/repository"
 	"avito/pkg/structures"
-	"database/sql"
 	"errors"
 	"log"
 	"testing"
@@ -28,10 +27,11 @@ func TestSegment_Create(t *testing.T) {
 	type mockBehavior func(args args, slug string)
 
 	tests := []struct {
-		name         string
-		mockBehavior mockBehavior
-		args         args
-		wantErr      bool
+		name          string
+		mockBehavior  mockBehavior
+		args          args
+		wantErr       bool
+		expectedError string
 	}{
 		{
 			name: "OK",
@@ -57,14 +57,15 @@ func TestSegment_Create(t *testing.T) {
 
 				mock.ExpectQuery("INSERT INTO segments").
 					WithArgs(args.Slug).
-					WillReturnError(sql.ErrNoRows)
+					WillReturnError(errors.New("duplicate slug"))
 
 				mock.ExpectRollback()
 			},
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "duplicate slug",
 		},
 		{
 			name: "TransactionError",
@@ -74,7 +75,8 @@ func TestSegment_Create(t *testing.T) {
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "transaction error",
 		},
 		{
 			name: "CommitError",
@@ -91,7 +93,8 @@ func TestSegment_Create(t *testing.T) {
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "commit error",
 		},
 		{
 			name: "QueryError",
@@ -107,7 +110,8 @@ func TestSegment_Create(t *testing.T) {
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "query error",
 		},
 	}
 
@@ -118,6 +122,7 @@ func TestSegment_Create(t *testing.T) {
 			got, err := repo.Create(structures.Segment(testCase.args))
 			if testCase.wantErr {
 				assert.Error(t, err)
+				assert.EqualError(t, err, testCase.expectedError)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.args.Slug, got)
@@ -142,22 +147,32 @@ func TestSegment_Delete(t *testing.T) {
 	type mockBehavior func(args args, slug string)
 
 	tests := []struct {
-		name         string
-		mockBehavior mockBehavior
-		args         args
-		wantErr      bool
+		name          string
+		mockBehavior  mockBehavior
+		args          args
+		wantErr       bool
+		expectedError string
 	}{
 		{
 			name: "DeleteExistingSegment",
 			mockBehavior: func(args args, slug string) {
-				mock.ExpectQuery("SELECT (.+) FROM segments").
+				mock.ExpectQuery("SELECT").
 					WithArgs(args.Slug).
 					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
 
 				mock.ExpectBegin()
-				mock.ExpectExec("DELETE FROM segments").
+				mock.ExpectExec("DELETE").
 					WithArgs(args.Slug).
 					WillReturnResult(sqlmock.NewResult(0, 1))
+
+				mock.ExpectBegin()
+				mock.ExpectQuery("SELECT").
+					WithArgs(args.Slug).
+					WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow(1))
+				mock.ExpectCommit()
+				mock.ExpectQuery("INSERT").
+					WithArgs(1, args.Slug, false).
+					WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow(1))
 				mock.ExpectCommit()
 			},
 			args: args{
@@ -168,19 +183,20 @@ func TestSegment_Delete(t *testing.T) {
 		{
 			name: "DeleteNonExistingSegment",
 			mockBehavior: func(args args, slug string) {
-				mock.ExpectQuery("SELECT (.+) FROM segments").
+				mock.ExpectQuery("SELECT").
 					WithArgs(args.Slug).
 					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(0))
 			},
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "segment with slug example does not exist",
 		},
 		{
 			name: "TransactionError",
 			mockBehavior: func(args args, slug string) {
-				mock.ExpectQuery("SELECT (.+) FROM segments").
+				mock.ExpectQuery("SELECT").
 					WithArgs(args.Slug).
 					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
 
@@ -189,30 +205,32 @@ func TestSegment_Delete(t *testing.T) {
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "transaction error",
 		},
 		{
 			name: "SelectError",
 			mockBehavior: func(args args, slug string) {
-				mock.ExpectQuery("SELECT (.+) FROM segments").
+				mock.ExpectQuery("SELECT").
 					WithArgs(args.Slug).
-					WillReturnError(errors.New("error reading"))
+					WillReturnError(errors.New("error reading segment"))
 			},
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "error reading segment",
 		},
 		{
 			name: "DeleteError",
 			mockBehavior: func(args args, slug string) {
-				mock.ExpectQuery("SELECT (.+) FROM segments").
+				mock.ExpectQuery("SELECT").
 					WithArgs(args.Slug).
 					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
 
 				mock.ExpectBegin()
 
-				mock.ExpectExec("DELETE FROM segments").
+				mock.ExpectExec("DELETE").
 					WithArgs(args.Slug).
 					WillReturnError(errors.New("delete error"))
 
@@ -221,7 +239,58 @@ func TestSegment_Delete(t *testing.T) {
 			args: args{
 				Slug: "example",
 			},
-			wantErr: true,
+			wantErr:       true,
+			expectedError: "delete error",
+		},
+		{
+			name: "CreateRepoForHistoryError",
+			mockBehavior: func(args args, slug string) {
+				mock.ExpectQuery("SELECT").
+					WithArgs(args.Slug).
+					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
+
+				mock.ExpectBegin()
+
+				mock.ExpectExec("DELETE").
+					WithArgs(args.Slug).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+
+				mock.ExpectBegin().WillReturnError(errors.New("repo for history error"))
+				mock.ExpectRollback()
+			},
+			args: args{
+				Slug: "example",
+			},
+			wantErr:       true,
+			expectedError: "repo for history error",
+		},
+		{
+			name: "HistoryError",
+			mockBehavior: func(args args, slug string) {
+				mock.ExpectQuery("SELECT").
+					WithArgs(args.Slug).
+					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
+
+				mock.ExpectBegin()
+				mock.ExpectExec("DELETE").
+					WithArgs(args.Slug).
+					WillReturnResult(sqlmock.NewResult(0, 1))
+
+				mock.ExpectBegin()
+				mock.ExpectQuery("SELECT").
+					WithArgs(args.Slug).
+					WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow(1))
+				mock.ExpectCommit()
+				mock.ExpectQuery("INSERT").
+					WithArgs(1, args.Slug, false).
+					WillReturnError(errors.New("history error"))
+				mock.ExpectRollback()
+			},
+			args: args{
+				Slug: "example",
+			},
+			wantErr:       true,
+			expectedError: "history error",
 		},
 	}
 
@@ -232,6 +301,7 @@ func TestSegment_Delete(t *testing.T) {
 			got, err := repo.Delete(structures.Segment(testCase.args))
 			if testCase.wantErr {
 				assert.Error(t, err)
+				assert.EqualError(t, err, testCase.expectedError)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.args.Slug, got)

@@ -18,5 +18,9 @@ func (s *UserSegmentsService) Patch(userSegments structures.UserSegments) (int, 
 }
 
 func (s *UserSegmentsService) GetUsersInSegment(user structures.User) ([]string, error) {
-	return s.repo.GetUsersInSegment(user)
+	return s.repo.GetUserSegments(user)
+}
+
+func (s *UserSegmentsService) GetSegmentUsers(segment structures.Segment) ([]int, error) {
+	return s.repo.GetSegmentUsers(segment)
 }

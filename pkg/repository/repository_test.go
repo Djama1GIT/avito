@@ -36,7 +36,7 @@ func TestRepository_NewRepository(t *testing.T) {
 				mock.ExpectBegin()
 
 				rows := sqlmock.NewRows([]string{"slug"}).AddRow(args.Slug)
-				mock.ExpectQuery("INSERT INTO segments").
+				mock.ExpectQuery("INSERT").
 					WithArgs(args.Slug).
 					WillReturnRows(rows)
 

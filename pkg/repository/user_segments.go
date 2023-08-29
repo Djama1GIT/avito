@@ -27,6 +27,11 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 			tx.Rollback()
 			return -1, fmt.Errorf("error occurred while processing segment to add '%s': %v", segment, err)
 		}
+		_, err = historyUpdate(tx, segment, userSegments.UserId, true)
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
 	}
 
 	for _, segment := range userSegments.SegmentsToDelete {
@@ -49,12 +54,18 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 			tx.Rollback()
 			return -1, fmt.Errorf("error occurred while processing segment to delete '%s': %v", segment, err)
 		}
+
+		_, err = historyUpdate(tx, segment, userSegments.UserId, false)
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
 	}
 
 	return userSegments.UserId, tx.Commit()
 }
 
-func (r *UserSegmentsDB) GetUsersInSegment(user structures.User) ([]string, error) {
+func (r *UserSegmentsDB) GetUserSegments(user structures.User) ([]string, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return nil, err
@@ -88,4 +99,40 @@ func (r *UserSegmentsDB) GetUsersInSegment(user structures.User) ([]string, erro
 	}
 
 	return slugs, nil
+}
+
+func (r *UserSegmentsDB) GetSegmentUsers(segment structures.Segment) ([]int, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	var users []int
+	createSegmentQuery := fmt.Sprintf("SELECT user_id FROM %s WHERE segment = $1", userSegmentsTable)
+	rows, err := tx.Query(createSegmentQuery, segment.Slug)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user int
+		if err := rows.Scan(&user); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

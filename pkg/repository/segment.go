@@ -55,5 +55,37 @@ func (r *SegmentDB) Delete(segment structures.Segment) (string, error) {
 		return "", err
 	}
 
+	repo := NewRepository(r.db)
+	user_ids, err := repo.UserSegments.GetSegmentUsers(segment)
+	if err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	for _, user_id := range user_ids {
+		_, err := historyUpdate(tx, segment.Slug, user_id, false)
+		if err != nil {
+			tx.Rollback()
+			return "", err
+		}
+	}
+
 	return segment.Slug, tx.Commit()
+}
+
+func historyUpdate(tx *sql.Tx, segment string, userId int, operation bool) (int, error) {
+	// operation:
+	// 		true - insert
+	//		false - delete
+	var user_id int
+	createUserSegmentsHistoryQuery := fmt.Sprintf(
+		"INSERT INTO %s (user_id, segment, operation) VALUES ($1, $2, $3) RETURNING user_id",
+		userSegmentsHistoryTable)
+
+	row := tx.QueryRow(createUserSegmentsHistoryQuery, userId, segment, operation)
+	if err := row.Scan(&user_id); err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+	return user_id, nil
 }

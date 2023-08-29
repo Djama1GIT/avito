@@ -15,6 +15,7 @@ type Segment interface {
 type UserSegments interface {
 	Patch(userSegments structures.UserSegments) (int, error)
 	GetUsersInSegment(user structures.User) ([]string, error)
+	GetSegmentUsers(segment structures.Segment) ([]int, error)
 }
 
 type Service struct {

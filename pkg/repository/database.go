@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	usersTable        = "users"
-	segmentsTable     = "segments"
-	userSegmentsTable = "user_segments"
+	usersTable               = "users"
+	segmentsTable            = "segments"
+	userSegmentsTable        = "user_segments"
+	userSegmentsHistoryTable = "user_segments_history"
 )
 
 type Config struct {

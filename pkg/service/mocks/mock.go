@@ -87,6 +87,21 @@ func (m *MockUserSegments) EXPECT() *MockUserSegmentsMockRecorder {
 	return m.recorder
 }
 
+// GetSegmentUsers mocks base method.
+func (m *MockUserSegments) GetSegmentUsers(segment structures.Segment) ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSegmentUsers", segment)
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSegmentUsers indicates an expected call of GetSegmentUsers.
+func (mr *MockUserSegmentsMockRecorder) GetSegmentUsers(segment interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSegmentUsers", reflect.TypeOf((*MockUserSegments)(nil).GetSegmentUsers), segment)
+}
+
 // GetUsersInSegment mocks base method.
 func (m *MockUserSegments) GetUsersInSegment(user structures.User) ([]string, error) {
 	m.ctrl.T.Helper()
