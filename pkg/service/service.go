@@ -5,6 +5,8 @@ import (
 	"avito/pkg/structures"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/mock.go
+
 type Segment interface {
 	Create(segment structures.Segment) (string, error)
 	Delete(segment structures.Segment) (string, error)

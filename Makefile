@@ -1,4 +1,4 @@
-.PHONY: swag build run test init_sql cover
+.PHONY: swag build run test init_sql cover mockgen
 
 swag:
 	swag init -g cmd/main.go
@@ -20,3 +20,6 @@ cover:
 	go test -short -count=1 -race -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 	rm coverage.out
+
+mockgen:
+	mockgen -source=pkg/service/service.go -destination=pkg/service/mocks/mock.go

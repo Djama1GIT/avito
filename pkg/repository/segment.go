@@ -2,16 +2,15 @@ package repository
 
 import (
 	"avito/pkg/structures"
+	"database/sql"
 	"fmt"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type SegmentDB struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewSegmentDB(db *sqlx.DB) *SegmentDB {
+func NewSegmentDB(db *sql.DB) *SegmentDB {
 	return &SegmentDB{db: db}
 }
 
@@ -33,6 +32,17 @@ func (r *SegmentDB) Create(segment structures.Segment) (string, error) {
 }
 
 func (r *SegmentDB) Delete(segment structures.Segment) (string, error) {
+	existsQuery := fmt.Sprintf("SELECT COUNT(slug) FROM %s WHERE slug = $1", segmentsTable)
+	var count int
+	err := r.db.QueryRow(existsQuery, segment.Slug).Scan(&count)
+	if err != nil {
+		return "", err
+	}
+
+	if count == 0 {
+		return "", fmt.Errorf("segment with slug %s does not exist", segment.Slug)
+	}
+
 	tx, err := r.db.Begin()
 	if err != nil {
 		return "", err

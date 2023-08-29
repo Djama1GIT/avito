@@ -2,16 +2,15 @@ package repository
 
 import (
 	"avito/pkg/structures"
+	"database/sql"
 	"fmt"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type UserSegmentsDB struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewUserSegmentsDB(db *sqlx.DB) *UserSegmentsDB {
+func NewUserSegmentsDB(db *sql.DB) *UserSegmentsDB {
 	return &UserSegmentsDB{db: db}
 }
 

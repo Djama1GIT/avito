@@ -2,8 +2,7 @@ package repository
 
 import (
 	"avito/pkg/structures"
-
-	"github.com/jmoiron/sqlx"
+	"database/sql"
 )
 
 type Segment interface {
@@ -17,13 +16,16 @@ type UserSegments interface {
 }
 
 type Repository struct {
-	Segment
-	UserSegments
+	Segment      Segment
+	UserSegments UserSegments
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db *sql.DB) *Repository {
+	segmentDB := NewSegmentDB(db)
+	userSegmentsDB := NewUserSegmentsDB(db)
+
 	return &Repository{
-		Segment:      NewSegmentDB(db),
-		UserSegments: NewUserSegmentsDB(db),
+		Segment:      segmentDB,
+		UserSegments: userSegmentsDB,
 	}
 }

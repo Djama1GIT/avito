@@ -32,7 +32,7 @@ func main() {
 		log.Fatalf("[Config Error] Initialization error: %s", err.Error())
 	}
 
-	db, err := repository.NewPostgresDB(repository.Config{
+	db, err := repository.NewDB(repository.Config{
 		Name:     viper.GetString("POSTGRES_DB"),
 		Host:     viper.GetString("POSTGRES_HOST"),
 		Port:     viper.GetString("POSTGRES_PORT"),
