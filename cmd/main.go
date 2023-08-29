@@ -33,6 +33,7 @@ func main() {
 	}
 
 	db, err := repository.NewDB(repository.Config{
+		Driver:   "postgres",
 		Name:     viper.GetString("POSTGRES_DB"),
 		Host:     viper.GetString("POSTGRES_HOST"),
 		Port:     viper.GetString("POSTGRES_PORT"),

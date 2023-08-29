@@ -63,6 +63,10 @@ func TestUserSegments_Patch(t *testing.T) {
 				mock.ExpectBegin()
 
 				for _, segment := range userSegments.SegmentsToDelete {
+					mock.ExpectQuery("SELECT").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
+
 					mock.ExpectExec("DELETE").
 						WithArgs(userSegments.UserId, segment).
 						WillReturnResult(sqlmock.NewResult(0, 1))
@@ -128,6 +132,10 @@ func TestUserSegments_Patch(t *testing.T) {
 				mock.ExpectBegin()
 
 				for _, segment := range userSegments.SegmentsToDelete {
+					mock.ExpectQuery("SELECT").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(1))
+
 					mock.ExpectExec("DELETE").
 						WithArgs(userSegments.UserId, segment).
 						WillReturnError(errors.New("delete error"))
@@ -146,6 +154,56 @@ func TestUserSegments_Patch(t *testing.T) {
 			wantUserID:  -1,
 			wantErr:     true,
 			expectError: "error occurred while processing segment to delete 'segment1': delete error",
+		},
+		{
+			name: "DeleteSegments_ErrorNonExistance",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				for _, segment := range userSegments.SegmentsToDelete {
+					mock.ExpectQuery("SELECT").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(0))
+					break
+				}
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:           1,
+					SegmentsToAdd:    nil,
+					SegmentsToDelete: []string{"segment1", "segment2"},
+				},
+			},
+			wantUserID:  -1,
+			wantErr:     true,
+			expectError: "error occurred while checking segment to delete existence 'segment1': user(1) is not in this segment",
+		},
+		{
+			name: "DeleteSegments_ErrorNonExistanceError",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				for _, segment := range userSegments.SegmentsToDelete {
+					mock.ExpectQuery("SELECT").
+						WithArgs(userSegments.UserId, segment).
+						WillReturnError(errors.New("existance select error"))
+					break
+				}
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:           1,
+					SegmentsToAdd:    nil,
+					SegmentsToDelete: []string{"segment1", "segment2"},
+				},
+			},
+			wantUserID:  -1,
+			wantErr:     true,
+			expectError: "error occurred while checking segment to delete existence 'segment1': existance select error",
 		},
 	}
 

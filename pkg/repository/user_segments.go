@@ -30,6 +30,19 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 	}
 
 	for _, segment := range userSegments.SegmentsToDelete {
+		existsQuery := fmt.Sprintf("SELECT count(*) FROM %s WHERE user_id = $1 AND segment = $2", userSegmentsTable)
+		var count int
+		err := r.db.QueryRow(existsQuery, userSegments.UserId, segment).Scan(&count)
+		if err != nil {
+			tx.Rollback()
+			return -1, fmt.Errorf("error occurred while checking segment to delete existence '%s': %v", segment, err)
+		}
+
+		if count < 1 {
+			tx.Rollback()
+			return -1, fmt.Errorf("error occurred while checking segment to delete existence '%s': user(%d) is not in this segment", segment, userSegments.UserId)
+		}
+
 		deleteSegmentQuery := fmt.Sprintf("DELETE FROM %s WHERE user_id = $1 AND segment = $2", userSegmentsTable)
 		_, err = tx.Exec(deleteSegmentQuery, userSegments.UserId, segment)
 		if err != nil {
