@@ -26,6 +26,8 @@ In Swagger, you can view the available endpoints and their parameters, and also 
 
 ## Usage Examples
 
+### Main Task
+
 <p>Method for creating a segment. Accepts the segment's slug (name)</p>
 
 ```
@@ -45,7 +47,8 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "example"}'
 <p>Method for adding a user to a segment. Accepts a list of segment slugs to add to the user, a list of segment slugs to remove from the user, and the user's ID</p>
 
 ```
-curl -X PATCH http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_delete": ["AVITO_PERFORMANCE_VAS", "AVITO_DISCOUNT_30"]}'
+curl -X PATCH http://127.0.0.1:8000/api/segments/ \
+-d '{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_delete": ["AVITO_PERFORMANCE_VAS", "AVITO_DISCOUNT_30"]}'
 ```
 > 200: {"user_id":1} <br>
 > 400: {"message":"error occurred while processing segment to add 'AVITO_VOICE_MESSAGES': pq: duplicate key value violates unique constraint \"user_segments_pkey\""} <br>
@@ -59,6 +62,8 @@ curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}'
 > 200: {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
 > 200: {"segments":[],"user_id":1} <br>
 
+### Additional Task 1
+
 <p>A method of obtaining the history of a user's entry/exit from a segment over a certain period in csv format.</p>
 
 ```
@@ -68,7 +73,24 @@ curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_mo
 > 400: {"message":"invalid YearMonth"} <br>
 > 400: {"message":"json: cannot unmarshal string into Go struct field UserHistory.user_id of type int"} <br>
 
+### Additional Task 2
 
+<p>Method for adding a user to a segment with the ability to set TTL</p>
+
+```
+curl -X PATCH http://127.0.0.1:8000/api/segments/ -d \
+'{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_add_expiration":"2023-08-29 00:00:00", "segments_to_delete": []}'
+```
+> 200: {"user_id":1} <br>
+> 400: {"message":"parsing time \"2023-08-31 00:00:\" as \"2006-01-02 15:04:05\": cannot parse \"\" as \"05\""} <br>
+
+<p>Method for deleting expired segments of a user</p>
+<sup>Automatically called using cron every minute</sup>
+
+```
+curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
+```
+> 200: empty result <br>
 
 ### Extended Examples
 ##### You can use the following curls in order and get the same responses
@@ -152,6 +174,22 @@ curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_mo
 > 1,AVITO_CLOUD_FEATURE,удаление,2023-08-29 20:33:12 <br>
 > 1,AVITO_UNDEFINED_FEATURE,удаление,2023-08-29 20:33:12 <br>
 
+```
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES"}' -w '\n'
+curl -X PATCH http://127.0.0.1:8000/api/segments/ \
+-d '{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_add_expiration":"1970-08-31 00:00:00", "segments_to_delete": []}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/ -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES"}' -w '\n'
+```
+
+> {"slug":"AVITO_VOICE_MESSAGES"} <br>
+> {"user_id":1} <br>
+> {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
+>  <br>
+> {"segments":[],"user_id":1} <br>
+> {"slug":"AVITO_VOICE_MESSAGES"} <br>
 
 ##### Russian
 ## Установка и настройка
@@ -178,6 +216,8 @@ docker-compose up --build
 
 ## Примеры использования
 
+### Основное задание
+
 <p>Метод создания сегмента. Принимает slug (название) сегмента</p>
 
 ```
@@ -197,7 +237,8 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "example"}'
 <p>Метод добавления пользователя в сегмент. Принимает список slug (названий) сегментов которые нужно добавить пользователю, список slug (названий) сегментов которые нужно удалить у пользователя, id пользователя</p>
 
 ```
-curl -X PATCH http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_delete": ["AVITO_PERFORMANCE_VAS", "AVITO_DISCOUNT_30"]}'
+curl -X PATCH http://127.0.0.1:8000/api/segments/ \
+-d '{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_delete": ["AVITO_PERFORMANCE_VAS", "AVITO_DISCOUNT_30"]}'
 ```
 > 200: {"user_id":1} <br>
 > 400: {"message":"error occurred while processing segment to add 'AVITO_VOICE_MESSAGES': pq: duplicate key value violates unique constraint \"user_segments_pkey\""} <br>
@@ -211,6 +252,8 @@ curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}'
 > 200: {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
 > 200: {"segments":[],"user_id":1} <br>
 
+### Дополнительное задание 1
+
 <p>Метод получения истории попадания/выбывания пользователя из сегмента за определенный период в формате csv</p>
 
 ```
@@ -219,6 +262,26 @@ curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_mo
 > 200: {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1} <br>
 > 400: {"message":"invalid YearMonth"} <br>
 > 400: {"message":"json: cannot unmarshal string into Go struct field UserHistory.user_id of type int"} <br>
+
+### Дополнительное задание 2
+
+<p>Метод добавления пользователя в сегмент с возможностью задавать TTL</p>
+
+```
+curl -X PATCH http://127.0.0.1:8000/api/segments/ -d \
+'{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_add_expiration":"2023-08-29 00:00:00", "segments_to_delete": []}'
+```
+> 200: {"user_id":1} <br>
+> 400: {"message":"parsing time \"2023-08-31 00:00:\" as \"2006-01-02 15:04:05\": cannot parse \"\" as \"05\""} <br>
+
+<p>Метод удаления истекших сегментов пользователя</p>
+<sup>Вызывается автоматически при помощи cron каждую минуту</sup>
+
+```
+curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
+```
+> 200: empty result <br>
+
 
 ### Расширенные примеры
 ##### Вы можете использовать curl'ы ниже по порядку и получить такие же ответы
@@ -301,3 +364,20 @@ curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_mo
 > 1,AVITO_DELIVERY_FEATURE,удаление,2023-08-29 20:33:12 <br>
 > 1,AVITO_CLOUD_FEATURE,удаление,2023-08-29 20:33:12 <br>
 > 1,AVITO_UNDEFINED_FEATURE,удаление,2023-08-29 20:33:12 <br>
+
+```
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES"}' -w '\n'
+curl -X PATCH http://127.0.0.1:8000/api/segments/ \
+-d '{"user_id": 1, "segments_to_add": ["AVITO_VOICE_MESSAGES"], "segments_to_add_expiration":"1970-08-31 00:00:00", "segments_to_delete": []}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/ -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES"}' -w '\n'
+```
+
+> {"slug":"AVITO_VOICE_MESSAGES"} <br>
+> {"user_id":1} <br>
+> {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
+>  <br>
+> {"segments":[],"user_id":1} <br>
+> {"slug":"AVITO_VOICE_MESSAGES"} <br>

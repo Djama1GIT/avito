@@ -50,6 +50,9 @@ definitions:
         items:
           type: string
         type: array
+      segments_to_add_expiration:
+        example: "2023-08-30 12:00:00"
+        type: string
       segments_to_delete:
         items:
           type: string
@@ -219,6 +222,27 @@ paths:
       summary: Create Segment
       tags:
       - segment
+  /users/expired-segments/:
+    delete:
+      operationId: delete-user-expired-segments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Delete Expired User Segments
+      tags:
+      - user
   /users/history/:
     get:
       description: |-

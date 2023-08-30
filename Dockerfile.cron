@@ -1,0 +1,13 @@
+FROM ubuntu:latest
+
+RUN apt-get update && apt-get -y install cron
+
+RUN apt-get -y install curl
+
+COPY cron/curl-cron /etc/cron.d/curl-cron
+
+RUN chmod 0644 /etc/cron.d/curl-cron
+
+RUN crontab /etc/cron.d/curl-cron
+
+CMD cron -f /etc/cron.d/curl-cron

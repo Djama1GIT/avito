@@ -18,6 +18,7 @@ type UserSegments interface {
 
 type User interface {
 	GetUserHistory(userHistory structures.UserHistory) (string, error)
+	DeleteExpiredSegments() error
 }
 
 type Repository struct {

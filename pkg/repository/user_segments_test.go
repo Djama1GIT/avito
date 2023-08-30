@@ -25,6 +25,9 @@ func TestUserSegments_Patch(t *testing.T) {
 
 	type mockBehavior func(args args, userSegments structures.UserSegments)
 
+	var validDateTime = "2023-08-28 20:00:00"
+	var invalidDateTime = "2023-08-28 202:00:00"
+
 	tests := []struct {
 		name         string
 		mockBehavior mockBehavior
@@ -33,6 +36,34 @@ func TestUserSegments_Patch(t *testing.T) {
 		wantErr      bool
 		expectError  string
 	}{
+		{
+			name: "AddSegments_Success",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				for _, segment := range userSegments.SegmentsToAdd {
+					mock.ExpectExec("INSERT").
+						WithArgs(userSegments.UserId, segment, &validDateTime).
+						WillReturnResult(sqlmock.NewResult(0, 1))
+					mock.ExpectQuery("INSERT").
+						WithArgs(1, segment, true).
+						WillReturnRows(sqlmock.NewRows([]string{"user_id"}).AddRow(1))
+				}
+
+				mock.ExpectCommit()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:                  1,
+					SegmentsToAdd:           []string{"segment1", "segment2"},
+					SegmentsToAddExpiration: &validDateTime,
+					SegmentsToDelete:        nil,
+				},
+			},
+			wantUserID:  1,
+			wantErr:     false,
+			expectError: "",
+		},
 		{
 			name: "AddSegments_Success",
 			mockBehavior: func(args args, userSegments structures.UserSegments) {
@@ -59,6 +90,51 @@ func TestUserSegments_Patch(t *testing.T) {
 			wantUserID:  1,
 			wantErr:     false,
 			expectError: "",
+		},
+		{
+			name: "AddSegments_ErrorWithTime",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:                  1,
+					SegmentsToAdd:           []string{"segment1", "segment2"},
+					SegmentsToAddExpiration: &invalidDateTime,
+					SegmentsToDelete:        nil,
+				},
+			},
+			wantUserID:  1,
+			wantErr:     true,
+			expectError: "parsing time \"2023-08-28 202:00:00\" as \"2006-01-02 15:04:05\": cannot parse \"2:00:00\" as \":\"",
+		},
+		{
+			name: "AddSegments_ErrorWithValidTime",
+			mockBehavior: func(args args, userSegments structures.UserSegments) {
+				mock.ExpectBegin()
+
+				for _, segment := range userSegments.SegmentsToAdd {
+					mock.ExpectExec("INSERT").
+						WithArgs(userSegments.UserId, segment, &validDateTime).
+						WillReturnError(errors.New("uwaaa"))
+					break
+				}
+
+				mock.ExpectRollback()
+			},
+			args: args{
+				UserSegments: structures.UserSegments{
+					UserId:                  1,
+					SegmentsToAdd:           []string{"segment1", "segment2"},
+					SegmentsToAddExpiration: &validDateTime,
+					SegmentsToDelete:        nil,
+				},
+			},
+			wantUserID:  1,
+			wantErr:     true,
+			expectError: "error occurred while processing segment to add 'segment1': uwaaa",
 		},
 		{
 			name: "DeleteSegments_Success",

@@ -16,3 +16,7 @@ func NewUserService(repo repository.User) *UserService {
 func (s *UserService) GetUserHistory(userHistory structures.UserHistory) (string, error) {
 	return s.repo.GetUserHistory(userHistory)
 }
+
+func (s *UserService) DeleteExpiredSegments() error {
+	return s.repo.DeleteExpiredSegments()
+}

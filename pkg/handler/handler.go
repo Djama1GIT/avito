@@ -43,10 +43,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 		users := api.Group(("/users"))
 		{
-			history := users.Group("/history")
-			{
-				history.GET("/", h.getUserHistory)
-			}
+			users.GET("/history/", h.getUserHistory)
+			users.DELETE("/expired-segments/", h.deleteExpiredSegments)
 		}
 	}
 

@@ -4,6 +4,7 @@ import (
 	"avito/pkg/structures"
 	"database/sql"
 	"fmt"
+	"time"
 )
 
 type UserSegmentsDB struct {
@@ -20,13 +21,34 @@ func (r *UserSegmentsDB) Patch(userSegments structures.UserSegments) (int, error
 		return -1, err
 	}
 
-	for _, segment := range userSegments.SegmentsToAdd {
-		createSegmentQuery := fmt.Sprintf("INSERT INTO %s (user_id, segment) VALUES ($1, $2)", userSegmentsTable)
-		_, err = tx.Exec(createSegmentQuery, userSegments.UserId, segment)
+	if userSegments.SegmentsToAddExpiration != nil {
+		_, err = time.Parse("2006-01-02 15:04:05", *userSegments.SegmentsToAddExpiration)
 		if err != nil {
 			tx.Rollback()
-			return -1, fmt.Errorf("error occurred while processing segment to add '%s': %v", segment, err)
+			return -1, err
 		}
+	}
+
+	for _, segment := range userSegments.SegmentsToAdd {
+		if userSegments.SegmentsToAddExpiration == nil {
+
+			createSegmentQuery := fmt.Sprintf("INSERT INTO %s (user_id, segment) VALUES ($1, $2)", userSegmentsTable)
+			_, err = tx.Exec(createSegmentQuery, userSegments.UserId, segment)
+			if err != nil {
+				tx.Rollback()
+				return -1, fmt.Errorf("error occurred while processing segment to add '%s': %v", segment, err)
+			}
+
+		} else {
+
+			createSegmentQuery := fmt.Sprintf("INSERT INTO %s (user_id, segment, expiration_time) VALUES ($1, $2, $3)", userSegmentsTable)
+			_, err = tx.Exec(createSegmentQuery, userSegments.UserId, segment, *userSegments.SegmentsToAddExpiration)
+			if err != nil {
+				tx.Rollback()
+				return -1, fmt.Errorf("error occurred while processing segment to add '%s': %v", segment, err)
+			}
+		}
+
 		_, err = historyUpdate(tx, segment, userSegments.UserId, true)
 		if err != nil {
 			tx.Rollback()

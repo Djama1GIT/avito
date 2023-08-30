@@ -155,6 +155,20 @@ func (m *MockUser) EXPECT() *MockUserMockRecorder {
 	return m.recorder
 }
 
+// DeleteExpiredSegments mocks base method.
+func (m *MockUser) DeleteExpiredSegments() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteExpiredSegments")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteExpiredSegments indicates an expected call of DeleteExpiredSegments.
+func (mr *MockUserMockRecorder) DeleteExpiredSegments() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteExpiredSegments", reflect.TypeOf((*MockUser)(nil).DeleteExpiredSegments))
+}
+
 // GetUserHistory mocks base method.
 func (m *MockUser) GetUserHistory(userHistory structures.UserHistory) (string, error) {
 	m.ctrl.T.Helper()

@@ -197,3 +197,71 @@ func TestUser_GetUserHistory(t *testing.T) {
 		})
 	}
 }
+
+func TestUser_DeleteExpiredSegments(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	repo := repository.NewUserDB(db)
+
+	type mockBehavior func()
+
+	tests := []struct {
+		name         string
+		mockBehavior mockBehavior
+		wantErr      bool
+		expectError  string
+	}{
+		{
+			name: "Success",
+			mockBehavior: func() {
+				mock.ExpectBegin()
+
+				mock.ExpectExec("DELETE").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+
+				mock.ExpectCommit()
+			},
+			wantErr:     false,
+			expectError: "",
+		},
+		{
+			name: "BeginError",
+			mockBehavior: func() {
+				mock.ExpectBegin().WillReturnError(errors.New("begin error"))
+			},
+			wantErr:     true,
+			expectError: "begin error",
+		},
+		{
+			name: "ExecError",
+			mockBehavior: func() {
+				mock.ExpectBegin()
+
+				mock.ExpectExec("DELETE").
+					WillReturnError(errors.New("exec error"))
+
+				mock.ExpectRollback()
+			},
+			wantErr:     true,
+			expectError: "exec error",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testCase.mockBehavior()
+
+			err := repo.DeleteExpiredSegments()
+			if testCase.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, testCase.expectError, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

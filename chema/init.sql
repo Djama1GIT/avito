@@ -6,15 +6,16 @@ CREATE TABLE segments
 
 CREATE TABLE user_segments
 (
-    user_id integer,
-    segment varchar(255) REFERENCES segments(slug) ON DELETE CASCADE,
+    user_id integer NOT NULL,
+    segment varchar(255) NOT NULL REFERENCES segments(slug) ON DELETE CASCADE,
+    expiration_time timestamp,
     PRIMARY KEY (user_id, segment)
 );
 
 CREATE TABLE user_segments_history
 (
-    user_id integer,
-    segment varchar(255),
-    operation boolean,
-    operation_datetime timestamp DEFAULT CURRENT_TIMESTAMP
+    user_id integer NOT NULL,
+    segment varchar(255) NOT NULL,
+    operation boolean NOT NULL,
+    operation_datetime timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

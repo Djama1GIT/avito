@@ -242,6 +242,38 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/expired-segments/": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete Expired User Segments",
+                "operationId": "delete-user-expired-segments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/history/": {
             "get": {
                 "description": "You can also use the request body to send data, but not here :)\np.s. For example, via curl",
@@ -386,6 +418,10 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "segments_to_add_expiration": {
+                    "type": "string",
+                    "example": "2023-08-30 12:00:00"
                 },
                 "segments_to_delete": {
                     "type": "array",

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"avito/pkg/structures"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -54,4 +55,20 @@ func (h *Handler) getUserHistory(c *gin.Context) {
 		UserId: input.Id,
 		Report: "http://localhost:8000/files/" + report,
 	})
+}
+
+// @Summary Delete Expired User Segments
+// @Tags user
+// @ID delete-user-expired-segments
+// @Accpet json
+// @Produce json
+// @Success 200 integer 1
+// @Failure 500 {object} errorResponse
+// @Failure default {object} errorResponse
+// @Router /users/expired-segments/ [delete]
+func (h *Handler) deleteExpiredSegments(c *gin.Context) {
+	log.Print("Garbage collection request received")
+	if err := h.services.User.DeleteExpiredSegments(); err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+	}
 }

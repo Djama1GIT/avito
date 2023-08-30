@@ -26,6 +26,15 @@ services:
 #    volumes:
 #      - server_data:/app/data
 
+  cron:
+    build:
+      dockerfile: Dockerfile.cron
+    container_name: avito_cron
+    restart: always
+    depends_on:
+      - server
+      - db
+
 #volumes:
 #  db_data:
 #  server_data:

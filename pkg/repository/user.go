@@ -113,3 +113,19 @@ func historyUpdate(tx *sql.Tx, segment string, userId int, operation bool) (int,
 	}
 	return user_id, nil
 }
+
+func (r *UserDB) DeleteExpiredSegments() error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	deleteSegmentQuery := fmt.Sprintf("DELETE FROM %s WHERE expiration_time IS NOT NULL AND expiration_time <= NOW()", userSegmentsTable)
+	_, err = tx.Exec(deleteSegmentQuery)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
