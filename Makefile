@@ -1,4 +1,4 @@
-.PHONY: swag build run test init_sql cover mockgen
+.PHONY: swag build run RUN test init_sql cover mockgen
 
 swag:
 	swag init -g cmd/main.go
@@ -9,8 +9,11 @@ build:
 run:
 	docker-compose up
 
+RUN: swag mockgen test build run
+
 test:
 	go test -v -count=1 ./...
+	rm -rf pkg/repository/reports
 
 init_sql:
 	# Password for user postgres: postgres
@@ -20,6 +23,7 @@ cover:
 	go test -short -count=1 -race -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 	rm coverage.out
+	rm -rf pkg/repository/reports
 
 mockgen:
 	mockgen -source=pkg/service/service.go -destination=pkg/service/mocks/mock.go

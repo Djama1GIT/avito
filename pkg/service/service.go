@@ -18,14 +18,20 @@ type UserSegments interface {
 	GetSegmentUsers(segment structures.Segment) ([]int, error)
 }
 
+type User interface {
+	GetUserHistory(userHistory structures.UserHistory) (string, error)
+}
+
 type Service struct {
 	Segment
 	UserSegments
+	User
 }
 
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		Segment:      NewSegmentService(repos.Segment),
 		UserSegments: NewUserSegmentsService(repos.UserSegments),
+		User:         NewUserService(repos.User),
 	}
 }

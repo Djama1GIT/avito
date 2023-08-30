@@ -5,6 +5,38 @@ definitions:
       message:
         type: string
     type: object
+  handler.validCreateSegmentResponse:
+    properties:
+      slug:
+        type: string
+    type: object
+  handler.validDeleteSegmentResponse:
+    properties:
+      slug:
+        type: string
+    type: object
+  handler.validGetUserHistoryResponse:
+    properties:
+      report:
+        example: http://localhost:8000/files/reports/user_history_YYYY-MM_0.csv
+        type: string
+      user_id:
+        type: integer
+    type: object
+  handler.validGetUserSegmentsResponse:
+    properties:
+      segments:
+        items:
+          type: string
+        type: array
+      user_id:
+        type: integer
+    type: object
+  handler.validPatchResponse:
+    properties:
+      user_id:
+        type: integer
+    type: object
   structures.Segment:
     properties:
       slug:
@@ -56,7 +88,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: integer
+            $ref: '#/definitions/handler.validDeleteSegmentResponse'
         "400":
           description: Bad Request
           schema:
@@ -77,9 +109,12 @@ paths:
       tags:
       - segment
     get:
-      operationId: get-users-in-segment
+      description: |-
+        You can also use the request body to send data, but not here :)
+        p.s. For example, via curl
+      operationId: get-user-segments
       parameters:
-      - description: User data
+      - description: User id
         in: query
         name: user_id
         required: true
@@ -90,7 +125,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: integer
+            $ref: '#/definitions/handler.validGetUserSegmentsResponse'
         "400":
           description: Bad Request
           schema:
@@ -107,7 +142,7 @@ paths:
           description: ""
           schema:
             $ref: '#/definitions/handler.errorResponse'
-      summary: Get Users In Segment
+      summary: Get User Segments
       tags:
       - user-segments
     patch:
@@ -127,7 +162,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: integer
+            $ref: '#/definitions/handler.validPatchResponse'
         "400":
           description: Bad Request
           schema:
@@ -164,7 +199,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: integer
+            $ref: '#/definitions/handler.validCreateSegmentResponse'
         "400":
           description: Bad Request
           schema:
@@ -184,4 +219,46 @@ paths:
       summary: Create Segment
       tags:
       - segment
+  /users/history/:
+    get:
+      description: |-
+        You can also use the request body to send data, but not here :)
+        p.s. For example, via curl
+      operationId: get-user-history
+      parameters:
+      - in: query
+        name: user_id
+        required: true
+        type: integer
+      - example: YYYY-MM
+        in: query
+        name: year_month
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.validGetUserHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Get User History
+      tags:
+      - user
 swagger: "2.0"

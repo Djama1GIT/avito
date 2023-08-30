@@ -72,20 +72,3 @@ func (r *SegmentDB) Delete(segment structures.Segment) (string, error) {
 
 	return segment.Slug, tx.Commit()
 }
-
-func historyUpdate(tx *sql.Tx, segment string, userId int, operation bool) (int, error) {
-	// operation:
-	// 		true - insert
-	//		false - delete
-	var user_id int
-	createUserSegmentsHistoryQuery := fmt.Sprintf(
-		"INSERT INTO %s (user_id, segment, operation) VALUES ($1, $2, $3) RETURNING user_id",
-		userSegmentsHistoryTable)
-
-	row := tx.QueryRow(createUserSegmentsHistoryQuery, userId, segment, operation)
-	if err := row.Scan(&user_id); err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-	return user_id, nil
-}

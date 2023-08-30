@@ -12,3 +12,11 @@ func ValidateSlug(slug string) error {
 	}
 	return nil
 }
+
+func ValidateYearMonth(yearMonth string) error {
+	match, _ := regexp.MatchString("^\\d{4}-\\d{2}$", yearMonth)
+	if !match {
+		return errors.New("invalid YearMonth")
+	}
+	return nil
+}

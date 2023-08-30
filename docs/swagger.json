@@ -14,18 +14,19 @@
     "paths": {
         "/segments/": {
             "get": {
+                "description": "You can also use the request body to send data, but not here :)\np.s. For example, via curl",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "user-segments"
                 ],
-                "summary": "Get Users In Segment",
-                "operationId": "get-users-in-segment",
+                "summary": "Get User Segments",
+                "operationId": "get-user-segments",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "User data",
+                        "description": "User id",
                         "name": "user_id",
                         "in": "query",
                         "required": true
@@ -35,7 +36,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "integer"
+                            "$ref": "#/definitions/handler.validGetUserSegmentsResponse"
                         }
                     },
                     "400": {
@@ -91,7 +92,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "integer"
+                            "$ref": "#/definitions/handler.validCreateSegmentResponse"
                         }
                     },
                     "400": {
@@ -147,7 +148,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "integer"
+                            "$ref": "#/definitions/handler.validDeleteSegmentResponse"
                         }
                     },
                     "400": {
@@ -203,7 +204,67 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "integer"
+                            "$ref": "#/definitions/handler.validPatchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/handler.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/history/": {
+            "get": {
+                "description": "You can also use the request body to send data, but not here :)\np.s. For example, via curl",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get User History",
+                "operationId": "get-user-history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "YYYY-MM",
+                        "name": "year_month",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.validGetUserHistoryResponse"
                         }
                     },
                     "400": {
@@ -240,6 +301,56 @@
             "properties": {
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "handler.validCreateSegmentResponse": {
+            "type": "object",
+            "properties": {
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.validDeleteSegmentResponse": {
+            "type": "object",
+            "properties": {
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.validGetUserHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "report": {
+                    "type": "string",
+                    "example": "http://localhost:8000/files/reports/user_history_YYYY-MM_0.csv"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.validGetUserSegmentsResponse": {
+            "type": "object",
+            "properties": {
+                "segments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.validPatchResponse": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },

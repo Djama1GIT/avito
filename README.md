@@ -59,6 +59,17 @@ curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}'
 > 200: {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
 > 200: {"segments":[],"user_id":1} <br>
 
+<p>A method of obtaining the history of a user's entry/exit from a segment over a certain period in csv format.</p>
+
+```
+curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_month": "2023-08"}'
+```
+> 200: {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1} <br>
+> 400: {"message":"invalid YearMonth"} <br>
+> 400: {"message":"json: cannot unmarshal string into Go struct field UserHistory.user_id of type int"} <br>
+
+
+
 ### Extended Examples
 ##### You can use the following curls in order and get the same responses
 
@@ -118,6 +129,29 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED
 > {"slug":"AVITO_CLOUD_FEATURE"} <br>
 > {"slug":"AVITO_UNDEFINED_FEATURE"} <br>
 
+```
+curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_month": "2023-08"}'
+```
+
+> {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1}
+>
+> user_history_2023-08_1.csv:
+> 
+> 1,AVITO_VOICE_MESSAGES,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_PERFORMANCE_VAS,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_DISCOUNT_30,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_DISCOUNT_50,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_DELIVERY_FEATURE,добавление,2023-08-29 20:33:12 <br>
+> 1,AVITO_CLOUD_FEATURE,добавление,2023-08-29 20:33:12 <br>
+> 1,AVITO_UNDEFINED_FEATURE,добавление,2023-08-29 20:33:12 <br>
+> 1,AVITO_VOICE_MESSAGES,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_PERFORMANCE_VAS,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_DISCOUNT_30,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_DISCOUNT_50,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_DELIVERY_FEATURE,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_CLOUD_FEATURE,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_UNDEFINED_FEATURE,удаление,2023-08-29 20:33:12 <br>
+
 
 ##### Russian
 ## Установка и настройка
@@ -139,7 +173,7 @@ docker-compose up --build
 
 ## Пользовательский интерфейс
 
-После запуска проекта вы сможете получить доступ к пользовательскому интерфейсу Swagger по адресу: http://localhost:8000/swagger/index.html.<br>
+После запуска проекта вы сможете получить доступ к пользовательскому интерфейсу Swagger по адресу:<br>http://localhost:8000/swagger/index.html.<br>
 В Swagger вы сможете просмотреть доступные ручки и их параметры, а также выполнять запросы к API.
 
 ## Примеры использования
@@ -176,6 +210,15 @@ curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}'
 ```
 > 200: {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
 > 200: {"segments":[],"user_id":1} <br>
+
+<p>Метод получения истории попадания/выбывания пользователя из сегмента за определенный период в формате csv</p>
+
+```
+curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_month": "2023-08"}'
+```
+> 200: {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1} <br>
+> 400: {"message":"invalid YearMonth"} <br>
+> 400: {"message":"json: cannot unmarshal string into Go struct field UserHistory.user_id of type int"} <br>
 
 ### Расширенные примеры
 ##### Вы можете использовать curl'ы ниже по порядку и получить такие же ответы
@@ -235,3 +278,26 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED
 > {"slug":"AVITO_DELIVERY_FEATURE"} <br>
 > {"slug":"AVITO_CLOUD_FEATURE"} <br>
 > {"slug":"AVITO_UNDEFINED_FEATURE"}
+
+```
+curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_month": "2023-08"}'
+```
+
+> {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1}
+>
+> user_history_2023-08_1.csv:
+> 
+> 1,AVITO_VOICE_MESSAGES,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_PERFORMANCE_VAS,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_DISCOUNT_30,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_DISCOUNT_50,добавление,2023-08-29 20:33:11 <br>
+> 1,AVITO_DELIVERY_FEATURE,добавление,2023-08-29 20:33:12 <br>
+> 1,AVITO_CLOUD_FEATURE,добавление,2023-08-29 20:33:12 <br>
+> 1,AVITO_UNDEFINED_FEATURE,добавление,2023-08-29 20:33:12 <br>
+> 1,AVITO_VOICE_MESSAGES,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_PERFORMANCE_VAS,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_DISCOUNT_30,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_DISCOUNT_50,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_DELIVERY_FEATURE,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_CLOUD_FEATURE,удаление,2023-08-29 20:33:12 <br>
+> 1,AVITO_UNDEFINED_FEATURE,удаление,2023-08-29 20:33:12 <br>

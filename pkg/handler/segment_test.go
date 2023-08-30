@@ -18,12 +18,12 @@ func TestHandler_createSegment(t *testing.T) {
 	type mockBehavior func(s *mock_service.MockSegment, segment structures.Segment)
 
 	tests := []struct {
-		name                string
-		inputBody           string
-		inputSegment        structures.Segment
-		mockBehavior        mockBehavior
-		expectedStatusCode  int
-		expectedRequestBody string
+		name                 string
+		inputBody            string
+		inputSegment         structures.Segment
+		mockBehavior         mockBehavior
+		expectedStatusCode   int
+		expectedResponseBody string
 	}{
 		{
 			name:      "OK",
@@ -34,8 +34,8 @@ func TestHandler_createSegment(t *testing.T) {
 			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
 				s.EXPECT().Create(segment).Return("example-slug", nil)
 			},
-			expectedStatusCode:  200,
-			expectedRequestBody: `{"slug":"example-slug"}`,
+			expectedStatusCode:   200,
+			expectedResponseBody: `{"slug":"example-slug"}`,
 		},
 		{
 			name:      "EmptySlug",
@@ -46,8 +46,8 @@ func TestHandler_createSegment(t *testing.T) {
 			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
 
 			},
-			expectedStatusCode:  400,
-			expectedRequestBody: `{"message":"Key: 'Segment.Slug' Error:Field validation for 'Slug' failed on the 'required' tag"}`,
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"Key: 'Segment.Slug' Error:Field validation for 'Slug' failed on the 'required' tag"}`,
 		},
 		{
 			name:      "InvalidSlug",
@@ -58,8 +58,8 @@ func TestHandler_createSegment(t *testing.T) {
 			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
 
 			},
-			expectedStatusCode:  400,
-			expectedRequestBody: `{"message":"invalid slug"}`,
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"invalid slug"}`,
 		},
 		{
 			name:      "InvalidJSON",
@@ -70,8 +70,8 @@ func TestHandler_createSegment(t *testing.T) {
 			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
 
 			},
-			expectedStatusCode:  400,
-			expectedRequestBody: `{"message":"invalid character 'e' looking for beginning of value"}`,
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"invalid character 'e' looking for beginning of value"}`,
 		},
 		{
 			name:      "ServiceFail",
@@ -82,8 +82,8 @@ func TestHandler_createSegment(t *testing.T) {
 			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
 				s.EXPECT().Create(segment).Return("example-slug", errors.New("service fail"))
 			},
-			expectedStatusCode:  500,
-			expectedRequestBody: `{"message":"service fail"}`,
+			expectedStatusCode:   500,
+			expectedResponseBody: `{"message":"service fail"}`,
 		},
 	}
 
@@ -107,7 +107,7 @@ func TestHandler_createSegment(t *testing.T) {
 			r.ServeHTTP(w, req)
 
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
-			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
+			assert.Equal(t, testCase.expectedResponseBody, w.Body.String())
 		})
 	}
 }

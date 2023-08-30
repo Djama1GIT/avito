@@ -14,7 +14,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param input body structures.Segment true "Slug of segment"
-// @Success 200 {integer} integer 1
+// @Success 200 {object} validCreateSegmentResponse
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
@@ -38,8 +38,8 @@ func (h *Handler) createSegment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"slug": slug,
+	c.JSON(http.StatusOK, validCreateSegmentResponse{
+		Segment: slug,
 	})
 }
 
@@ -49,7 +49,7 @@ func (h *Handler) createSegment(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param input body structures.Segment true "Slug of segment"
-// @Success 200 {integer} integer 1
+// @Success 200 {object} validDeleteSegmentResponse
 // @Failure 400,404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
@@ -73,7 +73,7 @@ func (h *Handler) deleteSegment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"slug": slug,
+	c.JSON(http.StatusOK, validDeleteSegmentResponse{
+		Segment: slug,
 	})
 }

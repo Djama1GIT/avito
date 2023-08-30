@@ -51,3 +51,45 @@ func TestValidateSlug_InvalidSlug(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateYearMonth_Valid(t *testing.T) {
+	tests := []struct {
+		yearMonth string
+	}{
+		{"2023-08"},
+		{"1970-01"},
+	}
+
+	for _, test := range tests {
+		err := utils.ValidateYearMonth(test.yearMonth)
+		if err != nil {
+			t.Errorf("Expected no error, but got: %v", err)
+		}
+	}
+}
+
+func TestValidateYearMonth_Invalid(t *testing.T) {
+	tests := []struct {
+		yearMonth   string
+		expectedErr error
+	}{
+		{"2023-8", errors.New("invalid YearMonth")},
+		{"2023/08", errors.New("invalid YearMonth")},
+		{"2023.8", errors.New("invalid YearMonth")},
+		{"23-08", errors.New("invalid YearMonth")},
+		{"23/8", errors.New("invalid YearMonth")},
+		{"23/08", errors.New("invalid YearMonth")},
+		{"08/2023", errors.New("invalid YearMonth")},
+		{"8/2023", errors.New("invalid YearMonth")},
+		{"8/23", errors.New("invalid YearMonth")},
+	}
+
+	for _, test := range tests {
+		err := utils.ValidateYearMonth(test.yearMonth)
+		if err == nil {
+			t.Error("Expected an error, but got nil")
+		} else if err.Error() != test.expectedErr.Error() {
+			t.Errorf("Expected error message '%s', but got '%s'", test.expectedErr.Error(), err.Error())
+		}
+	}
+}

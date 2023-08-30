@@ -312,7 +312,7 @@ func TestUserSegments_GetUserSegments(t *testing.T) {
 		expectError  string
 	}{
 		{
-			name: "GetUsersInSegment_Success",
+			name: "Success",
 			mockBehavior: func(args args, user structures.User) {
 				mock.ExpectBegin()
 
@@ -336,7 +336,7 @@ func TestUserSegments_GetUserSegments(t *testing.T) {
 			expectError: "",
 		},
 		{
-			name: "GetUsersInSegment_NoRows",
+			name: "NoRows",
 			mockBehavior: func(args args, user structures.User) {
 				mock.ExpectBegin()
 
@@ -505,7 +505,7 @@ func TestUserSegments_GetSegmentUsers(t *testing.T) {
 		expectError  string
 	}{
 		{
-			name: "GetSegmentUsers_Success",
+			name: "Success",
 			mockBehavior: func(args args, segment structures.Segment) {
 				mock.ExpectBegin()
 
@@ -529,7 +529,7 @@ func TestUserSegments_GetSegmentUsers(t *testing.T) {
 			expectError: "",
 		},
 		{
-			name: "GetUsersInSegment_NoRows",
+			name: "NoRows",
 			mockBehavior: func(args args, segment structures.Segment) {
 				mock.ExpectBegin()
 

@@ -24,6 +24,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	router.Use(cors.Default())
 
+	files := router.Group("/files")
+	{
+		files.Static("/reports", "./reports")
+	}
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := router.Group("/api")
@@ -34,6 +39,14 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			segments.DELETE("/", h.deleteSegment)
 			segments.PATCH("/", h.patchSegment)
 			segments.GET("/", h.getUsersInSegment)
+		}
+
+		users := api.Group(("/users"))
+		{
+			history := users.Group("/history")
+			{
+				history.GET("/", h.getUserHistory)
+			}
 		}
 	}
 
