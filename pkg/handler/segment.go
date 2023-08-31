@@ -32,6 +32,11 @@ func (h *Handler) createSegment(c *gin.Context) {
 		return
 	}
 
+	if input.Percentage != nil && (0 > *input.Percentage || *input.Percentage > 100) {
+		NewErrorResponse(c, http.StatusBadRequest, "invalid percentage")
+		return
+	}
+
 	slug, err := h.services.Segment.Create(input)
 	if err != nil {
 		NewErrorResponse(c, http.StatusInternalServerError, err.Error())

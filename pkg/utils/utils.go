@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"crypto/sha512"
 	"errors"
+	"fmt"
 	"regexp"
 )
 
@@ -19,4 +21,18 @@ func ValidateYearMonth(yearMonth string) error {
 		return errors.New("invalid YearMonth")
 	}
 	return nil
+}
+
+func Probability(segment string, number int64, percentage int) bool {
+	if percentage <= 0 {
+		return false
+	} else if percentage >= 100 {
+		return true
+	}
+	data := []byte(fmt.Sprintf("%s%d", segment, number))
+	hash := sha512.Sum512(data)
+
+	threshold := (512 * percentage) / 200
+
+	return int(hash[0]) < threshold
 }

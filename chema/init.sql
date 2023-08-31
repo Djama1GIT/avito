@@ -1,6 +1,7 @@
 CREATE TABLE segments
 (
-    slug varchar(255) PRIMARY KEY
+    slug varchar(255) PRIMARY KEY,
+    percent integer 
 );
 
 

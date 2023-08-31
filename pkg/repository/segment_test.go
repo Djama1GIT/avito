@@ -21,8 +21,10 @@ func TestSegment_Create(t *testing.T) {
 	repo := repository.NewSegmentDB(db)
 
 	type args struct {
-		Slug string
+		structures.Segment
 	}
+
+	var validPercentage = 77
 
 	type mockBehavior func(args args, slug string)
 
@@ -46,7 +48,29 @@ func TestSegment_Create(t *testing.T) {
 				mock.ExpectCommit()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "OK",
+			mockBehavior: func(args args, slug string) {
+				mock.ExpectBegin()
+
+				rows := sqlmock.NewRows([]string{"slug"}).AddRow(slug)
+				mock.ExpectQuery("INSERT INTO segments").
+					WithArgs(args.Slug, &args.Percentage).
+					WillReturnRows(rows)
+
+				mock.ExpectCommit()
+			},
+			args: args{
+				structures.Segment{
+					Slug:       "example",
+					Percentage: &validPercentage,
+				},
 			},
 			wantErr: false,
 		},
@@ -62,7 +86,9 @@ func TestSegment_Create(t *testing.T) {
 				mock.ExpectRollback()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "duplicate slug",
@@ -73,7 +99,9 @@ func TestSegment_Create(t *testing.T) {
 				mock.ExpectBegin().WillReturnError(errors.New("transaction error"))
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "transaction error",
@@ -91,7 +119,9 @@ func TestSegment_Create(t *testing.T) {
 				mock.ExpectCommit().WillReturnError(errors.New("commit error"))
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "commit error",
@@ -108,7 +138,9 @@ func TestSegment_Create(t *testing.T) {
 				mock.ExpectRollback()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "query error",
@@ -119,7 +151,7 @@ func TestSegment_Create(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			testCase.mockBehavior(testCase.args, testCase.args.Slug)
 
-			got, err := repo.Create(structures.Segment(testCase.args))
+			got, err := repo.Create(structures.Segment(testCase.args.Segment))
 			if testCase.wantErr {
 				assert.Error(t, err)
 				assert.EqualError(t, err, testCase.expectedError)
@@ -141,7 +173,7 @@ func TestSegment_Delete(t *testing.T) {
 	repo := repository.NewSegmentDB(db)
 
 	type args struct {
-		Slug string
+		structures.Segment
 	}
 
 	type mockBehavior func(args args, slug string)
@@ -176,7 +208,9 @@ func TestSegment_Delete(t *testing.T) {
 				mock.ExpectCommit()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr: false,
 		},
@@ -188,7 +222,9 @@ func TestSegment_Delete(t *testing.T) {
 					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(0))
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "segment with slug example does not exist",
@@ -203,7 +239,9 @@ func TestSegment_Delete(t *testing.T) {
 				mock.ExpectBegin().WillReturnError(errors.New("transaction error"))
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "transaction error",
@@ -216,7 +254,9 @@ func TestSegment_Delete(t *testing.T) {
 					WillReturnError(errors.New("error reading segment"))
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "error reading segment",
@@ -237,7 +277,9 @@ func TestSegment_Delete(t *testing.T) {
 				mock.ExpectRollback()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "delete error",
@@ -259,7 +301,9 @@ func TestSegment_Delete(t *testing.T) {
 				mock.ExpectRollback()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "repo for history error",
@@ -287,7 +331,9 @@ func TestSegment_Delete(t *testing.T) {
 				mock.ExpectRollback()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr:       true,
 			expectedError: "history error",
@@ -298,13 +344,103 @@ func TestSegment_Delete(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			testCase.mockBehavior(testCase.args, testCase.args.Slug)
 
-			got, err := repo.Delete(structures.Segment(testCase.args))
+			got, err := repo.Delete(structures.Segment(testCase.args.Segment))
 			if testCase.wantErr {
 				assert.Error(t, err)
 				assert.EqualError(t, err, testCase.expectedError)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, testCase.args.Slug, got)
+			}
+		})
+	}
+}
+
+func TestSegment_GetPercentageSegments(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	repo := repository.NewSegmentDB(db)
+
+	type mockBehavior func()
+
+	tests := []struct {
+		name          string
+		mockBehavior  mockBehavior
+		wantErr       bool
+		expectedError string
+	}{
+		{
+			name: "OK",
+			mockBehavior: func() {
+				mock.ExpectBegin()
+
+				mock.ExpectQuery("SELECT").
+					WillReturnRows(sqlmock.NewRows([]string{"slug", "percent"}).AddRow("example", 100))
+
+				mock.ExpectCommit()
+			},
+		},
+		{
+			name: "BeginError",
+			mockBehavior: func() {
+				mock.ExpectBegin().WillReturnError(errors.New("begin error"))
+			},
+			wantErr:       true,
+			expectedError: "begin error",
+		},
+		{
+			name: "QueryError",
+			mockBehavior: func() {
+				mock.ExpectBegin()
+
+				mock.ExpectQuery("SELECT").
+					WillReturnError(errors.New("query error"))
+			},
+			wantErr:       true,
+			expectedError: "query error",
+		},
+		{
+			name: "RowsError",
+			mockBehavior: func() {
+				mock.ExpectBegin()
+
+				mock.ExpectQuery("SELECT").
+					WillReturnRows(sqlmock.NewRows([]string{"slug"}).AddRow(nil).RowError(0, errors.New("row error")))
+
+				mock.ExpectRollback()
+			},
+			wantErr:       true,
+			expectedError: "row error",
+		},
+		{
+			name: "RowsScanError",
+			mockBehavior: func() {
+				mock.ExpectBegin()
+
+				mock.ExpectQuery("SELECT").
+					WillReturnRows(sqlmock.NewRows([]string{"slug", "percent"}).AddRow(nil, nil))
+
+				mock.ExpectRollback()
+			},
+			wantErr:       true,
+			expectedError: "sql: Scan error on column index 0, name \"slug\": converting NULL to string is unsupported",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			testCase.mockBehavior()
+
+			_, err := repo.GetPercentageSegments()
+			if testCase.wantErr {
+				assert.Error(t, err)
+				assert.EqualError(t, err, testCase.expectedError)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

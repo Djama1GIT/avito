@@ -21,8 +21,14 @@ func (r *SegmentDB) Create(segment structures.Segment) (string, error) {
 	}
 
 	var slug string
-	createSegmentQuery := fmt.Sprintf("INSERT INTO %s (slug) VALUES ($1) RETURNING slug", segmentsTable)
-	row := tx.QueryRow(createSegmentQuery, segment.Slug)
+	var row *sql.Row
+	if segment.Percentage != nil {
+		createSegmentQuery := fmt.Sprintf("INSERT INTO %s (slug, percent) VALUES ($1, $2) RETURNING slug", segmentsTable)
+		row = tx.QueryRow(createSegmentQuery, segment.Slug, *segment.Percentage)
+	} else {
+		createSegmentQuery := fmt.Sprintf("INSERT INTO %s (slug) VALUES ($1) RETURNING slug", segmentsTable)
+		row = tx.QueryRow(createSegmentQuery, segment.Slug)
+	}
 	if err := row.Scan(&slug); err != nil {
 		tx.Rollback()
 		return "", err
@@ -71,4 +77,36 @@ func (r *SegmentDB) Delete(segment structures.Segment) (string, error) {
 	}
 
 	return segment.Slug, tx.Commit()
+}
+
+func (r *SegmentDB) GetPercentageSegments() (map[string]int, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	segments := make(map[string]int)
+	getSegmentsQuery := fmt.Sprintf("SELECT slug, percent FROM %s WHERE percent IS NOT NULL", segmentsTable)
+	rows, err := tx.Query(getSegmentsQuery)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var slug string
+		var percent int
+		if err := rows.Scan(&slug, &percent); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		segments[slug] = percent
+	}
+
+	if err := rows.Err(); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	return segments, tx.Commit()
 }

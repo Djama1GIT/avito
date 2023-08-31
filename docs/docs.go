@@ -400,6 +400,9 @@ const docTemplate = `{
                 "slug"
             ],
             "properties": {
+                "percentage": {
+                    "type": "integer"
+                },
                 "slug": {
                     "type": "string"
                 }

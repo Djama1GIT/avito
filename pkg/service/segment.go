@@ -20,3 +20,7 @@ func (s *SegmentService) Create(segment structures.Segment) (string, error) {
 func (s *SegmentService) Delete(segment structures.Segment) (string, error) {
 	return s.repo.Delete(segment)
 }
+
+func (s *SegmentService) GetPercentageSegments() (map[string]int, error) {
+	return s.repo.GetPercentageSegments()
+}

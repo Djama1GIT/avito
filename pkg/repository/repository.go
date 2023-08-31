@@ -8,6 +8,7 @@ import (
 type Segment interface {
 	Create(segment structures.Segment) (string, error)
 	Delete(segment structures.Segment) (string, error)
+	GetPercentageSegments() (map[string]int, error)
 }
 
 type UserSegments interface {

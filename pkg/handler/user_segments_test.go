@@ -123,7 +123,7 @@ func TestHandler_patchSegment(t *testing.T) {
 }
 
 func TestHandler_getUsersInSegment(t *testing.T) {
-	type mockBehavior func(s *mock_service.MockUserSegments, input structures.User)
+	type mockBehavior func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User)
 
 	tests := []struct {
 		name                 string
@@ -141,11 +141,26 @@ func TestHandler_getUsersInSegment(t *testing.T) {
 			inputData: structures.User{
 				Id: 1,
 			},
-			mockBehavior: func(s *mock_service.MockUserSegments, input structures.User) {
-				s.EXPECT().GetUsersInSegment(input).Return([]string{"segment1", "segment2"}, nil)
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
+				us.EXPECT().GetUsersInSegment(input).Return([]string{"segment1", "segment2"}, nil)
+				s.EXPECT().GetPercentageSegments().Return(map[string]int{}, nil)
 			},
 			expectedStatusCode:   200,
 			expectedResponseBody: `{"segments":["segment1","segment2"],"user_id":1}`,
+		},
+		{
+			name:        "OK",
+			queryParams: map[string]string{"user_id": "1"},
+			inputBody:   `{"id": 1}`,
+			inputData: structures.User{
+				Id: 1,
+			},
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
+				us.EXPECT().GetUsersInSegment(input).Return([]string{"segment1", "segment2"}, nil)
+				s.EXPECT().GetPercentageSegments().Return(map[string]int{"segment3": 100}, nil)
+			},
+			expectedStatusCode:   200,
+			expectedResponseBody: `{"segments":["segment1","segment2","segment3"],"user_id":1}`,
 		},
 		{
 			name:        "EmptySegments",
@@ -154,8 +169,9 @@ func TestHandler_getUsersInSegment(t *testing.T) {
 			inputData: structures.User{
 				Id: 1,
 			},
-			mockBehavior: func(s *mock_service.MockUserSegments, input structures.User) {
-				s.EXPECT().GetUsersInSegment(input).Return(nil, nil)
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
+				us.EXPECT().GetUsersInSegment(input).Return(nil, nil)
+				s.EXPECT().GetPercentageSegments().Return(map[string]int{}, nil)
 			},
 			expectedStatusCode:   200,
 			expectedResponseBody: `{"segments":[],"user_id":1}`,
@@ -165,7 +181,7 @@ func TestHandler_getUsersInSegment(t *testing.T) {
 			queryParams: map[string]string{"user_id": "invalid"},
 			inputBody:   ``,
 			inputData:   structures.User{},
-			mockBehavior: func(s *mock_service.MockUserSegments, input structures.User) {
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
 
 			},
 			expectedStatusCode:   400,
@@ -176,7 +192,7 @@ func TestHandler_getUsersInSegment(t *testing.T) {
 			queryParams: map[string]string{},
 			inputBody:   `"id": 1}`,
 			inputData:   structures.User{},
-			mockBehavior: func(s *mock_service.MockUserSegments, input structures.User) {
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
 
 			},
 			expectedStatusCode:   400,
@@ -189,8 +205,22 @@ func TestHandler_getUsersInSegment(t *testing.T) {
 			inputData: structures.User{
 				Id: 1,
 			},
-			mockBehavior: func(s *mock_service.MockUserSegments, input structures.User) {
-				s.EXPECT().GetUsersInSegment(input).Return(nil, errors.New("service fail"))
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
+				us.EXPECT().GetUsersInSegment(input).Return(nil, errors.New("service fail"))
+			},
+			expectedStatusCode:   500,
+			expectedResponseBody: `{"message":"service fail"}`,
+		},
+		{
+			name:        "ServiceFail",
+			queryParams: map[string]string{"user_id": "1"},
+			inputBody:   `{"id": 1}`,
+			inputData: structures.User{
+				Id: 1,
+			},
+			mockBehavior: func(us *mock_service.MockUserSegments, s *mock_service.MockSegment, input structures.User) {
+				us.EXPECT().GetUsersInSegment(input).Return(nil, nil)
+				s.EXPECT().GetPercentageSegments().Return(nil, errors.New("service fail"))
 			},
 			expectedStatusCode:   500,
 			expectedResponseBody: `{"message":"service fail"}`,
@@ -202,10 +232,11 @@ func TestHandler_getUsersInSegment(t *testing.T) {
 			ctl := gomock.NewController(t)
 			defer ctl.Finish()
 
-			mock := mock_service.NewMockUserSegments(ctl)
-			testCase.mockBehavior(mock, testCase.inputData)
+			usMock := mock_service.NewMockUserSegments(ctl)
+			sMock := mock_service.NewMockSegment(ctl)
+			testCase.mockBehavior(usMock, sMock, testCase.inputData)
 
-			services := &service.Service{UserSegments: mock}
+			services := &service.Service{UserSegments: usMock, Segment: sMock}
 			h := Handler{services}
 
 			r := gin.New()

@@ -4,6 +4,8 @@ import (
 	"avito/pkg/utils"
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateSlug_ValidSlug(t *testing.T) {
@@ -91,5 +93,33 @@ func TestValidateYearMonth_Invalid(t *testing.T) {
 		} else if err.Error() != test.expectedErr.Error() {
 			t.Errorf("Expected error message '%s', but got '%s'", test.expectedErr.Error(), err.Error())
 		}
+	}
+}
+
+func TestProbability(t *testing.T) {
+	tests := []struct {
+		Slug       string
+		UserId     int
+		Percentage int
+		Expected   bool
+	}{
+		{"example", 1, 50, true},
+		{"example", 2, 50, true},
+		{"example", 3, 50, true},
+		{"example", 4, 50, true},
+		{"example", 5, 50, true},
+		{"example", 6, 50, false},
+		{"example", 7, 50, true},
+		{"example", 8, 50, false},
+		{"AVITO_VOICE_MESSAGES", 275456710, 17, false},
+		{"AVITO_PERFORMANCE_VAS", 12345678910, 85, true},
+		{"AVITO_DISCOUNT_30", 10987654231, 46, false},
+		{"AVITO_DISCOUNT_50", 88005553535, 60, true},
+		{"", 0, -1, false},
+		{"", 0, 101, true},
+	}
+	_ = tests
+	for _, testCase := range tests {
+		assert.Equal(t, testCase.Expected, utils.Probability(testCase.Slug, int64(testCase.UserId), testCase.Percentage))
 	}
 }

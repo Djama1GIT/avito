@@ -4,6 +4,7 @@ import (
 	"avito/pkg/structures"
 	"avito/pkg/utils"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -90,12 +91,48 @@ func (h *Handler) getUsersInSegment(c *gin.Context) {
 		return
 	}
 
+	percentageSegments, err := h.services.GetPercentageSegments()
+	if err != nil {
+		NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	if segments == nil {
 		segments = []string{}
 	}
+
+	segments = mergeUserSegmentsAndPercentageSegments(segments, input.Id, percentageSegments)
 
 	c.JSON(http.StatusOK, validGetUserSegmentsResponse{
 		UserId:   input.Id,
 		Segments: segments,
 	})
+}
+
+func mergeUserSegmentsAndPercentageSegments(segments1 []string, user_id int, segments2 map[string]int) []string {
+	merged := make(map[string]bool)
+
+	for _, item := range segments1 {
+		merged[item] = true
+	}
+
+	addedFromSegments2 := false
+
+	for slug, probability := range segments2 {
+		if !merged[slug] && utils.Probability(slug, int64(user_id), probability) {
+			merged[slug] = true
+			addedFromSegments2 = true
+		}
+	}
+
+	if addedFromSegments2 {
+		result := make([]string, 0, len(merged))
+		for item := range merged {
+			result = append(result, item)
+		}
+		sort.Strings(result)
+		return result
+	}
+
+	return segments1
 }

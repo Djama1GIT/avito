@@ -64,6 +64,21 @@ func (mr *MockSegmentMockRecorder) Delete(segment interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockSegment)(nil).Delete), segment)
 }
 
+// GetPercentageSegments mocks base method.
+func (m *MockSegment) GetPercentageSegments() (map[string]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPercentageSegments")
+	ret0, _ := ret[0].(map[string]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPercentageSegments indicates an expected call of GetPercentageSegments.
+func (mr *MockSegmentMockRecorder) GetPercentageSegments() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPercentageSegments", reflect.TypeOf((*MockSegment)(nil).GetPercentageSegments))
+}
+
 // MockUserSegments is a mock of UserSegments interface.
 type MockUserSegments struct {
 	ctrl     *gomock.Controller

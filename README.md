@@ -19,10 +19,19 @@ cd avito
 ```bash
 docker-compose up --build
 ```
+
 ## User Interface
 
 After starting the project, you can access the Swagger user interface at: http://localhost:8000/swagger/index.html.<br>
 In Swagger, you can view the available endpoints and their parameters, and also make requests to the API.
+
+## Extra
+
+<p>If the tables in the database were not created automatically, use:</p>
+
+```
+make init_sql
+```
 
 ## Usage Examples
 
@@ -92,6 +101,37 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
 ```
 > 200: empty result <br>
 
+### Additional Task 3
+
+<p>An option to specify the percentage of users who will automatically be included in the segment has been added to the segment creation method.</p>
+<sup>
+There are many different ways this functionality could be implemented, and after some consideration, the following decision was made:
+<br>
+Inclusion in the segment (or not) depends on a hash function that:
+
+1. Takes as input the user ID, segment, and probability.
+
+2. Hashes them.
+
+3. Using the formula and specified probability, returns true or false, always the same.
+
+Nuances: <br>
+1. The number of users included in the segment may vary by up to ~1% from (specified probability * total number of users).
+> I deemed this acceptable, as this is a service for analysts, and quality is more important than quantity here.
+>
+> Specifically, this function ensures maximum diversification of users included in the segment,
+>
+> as random users from the entire population will be included in the segment, without any particular user being included too often or too infrequently,
+>
+> which would be the case with a simpler implementation.
+</sup>
+
+```
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES", "percentage": 50}'
+```
+> 200: {"slug": "AVITO_VOICE_MESSAGES"} <br>
+> 400: {"message": "invalid percentage"} <br>
+
 ### Extended Examples
 ##### You can use the following curls in order and get the same responses
 
@@ -142,7 +182,6 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_DELIVERY_
 curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_CLOUD_FEATURE"}' -w '\n'
 curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED_FEATURE"}' -w '\n'
 ```
-
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
 > {"slug":"AVITO_PERFORMANCE_VAS"} <br>
 > {"slug":"AVITO_DISCOUNT_30"} <br>
@@ -154,7 +193,6 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED
 ```
 curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_month": "2023-08"}'
 ```
-
 > {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1}
 >
 > user_history_2023-08_1.csv:
@@ -183,13 +221,29 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/ -w '\n'
 curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}' -w '\n'
 curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES"}' -w '\n'
 ```
-
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
 > {"user_id":1} <br>
 > {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
 >  <br>
 > {"segments":[],"user_id":1} <br>
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
+
+```
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug", "percentage": 27}' -w '\n'
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug2", "percentage": 27}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 420}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 421}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 422}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug"}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug2"}' -w '\n'
+```
+> {"slug":"example-slug"} <br>
+> {"slug":"example-slug2"} <br>
+> {"segments":["example-slug"],"user_id":420} <br>
+> {"segments":["example-slug","example-slug2"],"user_id":421} <br>
+> {"segments":[],"user_id":422} <br>
+> {"slug":"example-slug"} <br>
+> {"slug":"example-slug2"} <br>
 
 ##### Russian
 ## Установка и настройка
@@ -213,6 +267,14 @@ docker-compose up --build
 
 После запуска проекта вы сможете получить доступ к пользовательскому интерфейсу Swagger по адресу:<br>http://localhost:8000/swagger/index.html.<br>
 В Swagger вы сможете просмотреть доступные ручки и их параметры, а также выполнять запросы к API.
+
+## Дополнительно
+
+<p>Если таблицы в БД не создались автоматически используйте:<p>
+
+```
+make init_sql
+```
 
 ## Примеры использования
 
@@ -282,6 +344,42 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
 ```
 > 200: empty result <br>
 
+### Дополнительное задание 3
+
+<p>В методе создания сегмента, добавлена опция указания процента пользователей, которые будут попадать в сегмент автоматически.</p>
+<sup>
+Есть множество различных вариантов, как можно было бы реализовать этот функционал,
+и в итоге после некоторых раздумий было принято такое решение: 
+<br>
+Попадание в сегмент(или нет) зависит от хеш-функции, которая: 
+
+1. Принимает на вход id пользователя, сегмент, вероятность.
+
+2. Хеширует их
+
+3. По формуле, с указанной вероятность, возвращает true или false, причем всегда одинаково.
+
+
+Ньюансы: <br>
+1. Количество пользователей попавших в сегмент может изменяться до ~1%
+от (указанной вероятности * количество всех пользователей)
+> Я посчитал это допустимым, т.к. это сервис для аналитиков, и тут важнее качество, а не количество
+>
+> А именно благодаря такой функции можно обеспечить максимальную диверсификацию попавших в сегмент пользователей,
+>
+> т.к. в сегмент будут попадать случайные пользователи из всей массы, и при этом не будет такого,
+>
+> что определенный пользователь попадает часто в какие-то сегменты, а другой наоборот, 
+>
+> если бы была использована более простая реализация.
+</sup>
+
+```
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES", "percentage": 50}'
+```
+> 200: {"slug": "AVITO_VOICE_MESSAGES"} <br>
+> 400: {"message": "invalid percentage"} <br>
+
 
 ### Расширенные примеры
 ##### Вы можете использовать curl'ы ниже по порядку и получить такие же ответы
@@ -295,7 +393,6 @@ curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_DELIVERY_FE
 curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_CLOUD_FEATURE"}' -w '\n'
 curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED_FEATURE"}' -w '\n'
 ```
-
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
 > {"slug":"AVITO_PERFORMANCE_VAS"} <br>
 > {"slug":"AVITO_DISCOUNT_30"} <br>
@@ -333,7 +430,6 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_DELIVERY_
 curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_CLOUD_FEATURE"}' -w '\n'
 curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED_FEATURE"}' -w '\n'
 ```
-
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
 > {"slug":"AVITO_PERFORMANCE_VAS"} <br>
 > {"slug":"AVITO_DISCOUNT_30"} <br>
@@ -345,7 +441,6 @@ curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_UNDEFINED
 ```
 curl -X GET http://127.0.0.1:8000/api/users/history/ -d '{"user_id": 1, "year_month": "2023-08"}'
 ```
-
 > {"report":"http://localhost:8000/files/reports/user_history_2023-08_1.csv","user_id":1}
 >
 > user_history_2023-08_1.csv:
@@ -374,10 +469,26 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/ -w '\n'
 curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 1}' -w '\n'
 curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "AVITO_VOICE_MESSAGES"}' -w '\n'
 ```
-
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
 > {"user_id":1} <br>
 > {"segments":["AVITO_VOICE_MESSAGES"],"user_id":1} <br>
 >  <br>
 > {"segments":[],"user_id":1} <br>
 > {"slug":"AVITO_VOICE_MESSAGES"} <br>
+
+```
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug", "percentage": 27}' -w '\n'
+curl -X POST http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug2", "percentage": 27}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 420}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 421}' -w '\n'
+curl -X GET http://127.0.0.1:8000/api/segments/ -d '{"user_id": 422}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug"}' -w '\n'
+curl -X DELETE http://127.0.0.1:8000/api/segments/ -d '{"slug": "example-slug2"}' -w '\n'
+```
+> {"slug":"example-slug"} <br>
+> {"slug":"example-slug2"} <br>
+> {"segments":["example-slug"],"user_id":420} <br>
+> {"segments":["example-slug","example-slug2"],"user_id":421} <br>
+> {"segments":[],"user_id":422} <br>
+> {"slug":"example-slug"} <br>
+> {"slug":"example-slug2"} <br>

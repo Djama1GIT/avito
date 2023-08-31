@@ -6,6 +6,7 @@ import (
 	"avito/pkg/structures"
 	"bytes"
 	"errors"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -16,6 +17,9 @@ import (
 
 func TestHandler_createSegment(t *testing.T) {
 	type mockBehavior func(s *mock_service.MockSegment, segment structures.Segment)
+
+	var validPercentage = 77
+	var invalidPercentage = 101
 
 	tests := []struct {
 		name                 string
@@ -60,6 +64,32 @@ func TestHandler_createSegment(t *testing.T) {
 			},
 			expectedStatusCode:   400,
 			expectedResponseBody: `{"message":"invalid slug"}`,
+		},
+		{
+			name:      "ValidPercentage",
+			inputBody: fmt.Sprintf(`{"slug": "example", "percentage": %d}`, validPercentage),
+			inputSegment: structures.Segment{
+				Slug:       "example",
+				Percentage: &validPercentage,
+			},
+			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
+				s.EXPECT().Create(segment).Return("example", nil)
+			},
+			expectedStatusCode:   200,
+			expectedResponseBody: `{"slug":"example"}`,
+		},
+		{
+			name:      "InvalidPercentage",
+			inputBody: fmt.Sprintf(`{"slug": "example", "percentage": %d}`, invalidPercentage),
+			inputSegment: structures.Segment{
+				Slug:       "example",
+				Percentage: &invalidPercentage,
+			},
+			mockBehavior: func(s *mock_service.MockSegment, segment structures.Segment) {
+
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: `{"message":"invalid percentage"}`,
 		},
 		{
 			name:      "InvalidJSON",

@@ -19,7 +19,7 @@ func TestRepository_NewRepository(t *testing.T) {
 	repo := repository.NewRepository(db)
 
 	type args struct {
-		Slug string
+		structures.Segment
 	}
 
 	type mockBehavior func(args args, slug string)
@@ -43,7 +43,9 @@ func TestRepository_NewRepository(t *testing.T) {
 				mock.ExpectCommit()
 			},
 			args: args{
-				Slug: "example",
+				structures.Segment{
+					Slug: "example",
+				},
 			},
 			wantErr: false,
 		},
@@ -53,7 +55,7 @@ func TestRepository_NewRepository(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			testCase.mockBehavior(testCase.args, testCase.args.Slug)
 
-			got, err := repo.Segment.Create(structures.Segment(testCase.args))
+			got, err := repo.Segment.Create(structures.Segment(testCase.args.Segment))
 			if testCase.wantErr {
 				assert.Error(t, err)
 			} else {
