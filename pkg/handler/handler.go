@@ -26,7 +26,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	files := router.Group("/files")
 	{
-		files.Static("/reports", "./reports")
+		files.Static("/reports", "../../reports")
 	}
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

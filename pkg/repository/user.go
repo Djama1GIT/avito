@@ -28,15 +28,15 @@ func (r *UserDB) GetUserHistory(userHistory structures.UserHistory) (string, err
 		return "", err
 	}
 
-	reportFolderPath := "reports"
+	reportFolderPath := "../../reports"
 	err = os.MkdirAll(reportFolderPath, os.ModePerm)
 	if err != nil {
 		tx.Rollback()
 		return "", err
 	}
 
-	reportFileName := fmt.Sprintf("%s/user_history_%s_%d.csv", reportFolderPath, userHistory.YearMonth, userHistory.Id)
-	reportFile, err := os.Create(reportFileName)
+	reportFileName := fmt.Sprintf("reports/user_history_%s_%d.csv", userHistory.YearMonth, userHistory.Id)
+	reportFile, err := os.Create("../../" + reportFileName)
 	if err != nil {
 		tx.Rollback()
 		return "", err

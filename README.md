@@ -107,7 +107,7 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
 <sup>
 There are many different ways this functionality could be implemented, and after some consideration, the following decision was made:
 <br>
-Inclusion in the segment (or not) depends on a hash function that:
+Inclusion in the segment (or not) depends on a function that:
 
 1. Takes as input the user ID, segment, and probability.
 
@@ -115,13 +115,17 @@ Inclusion in the segment (or not) depends on a hash function that:
 
 3. Using the formula and specified probability, returns true or false, always the same.
 
+[Function](https://github.com/Djama1GIT/avito/blob/d144b24b477f2fa6dc6c8bd130e995de80569267/pkg/utils/utils.go#L26)
+
 Nuances: <br>
 1. The number of users included in the segment may vary by up to ~1% from (specified probability * total number of users).
 > I deemed this acceptable, as this is a service for analysts, and quality is more important than quantity here.
 >
 > Specifically, this function ensures maximum diversification of users included in the segment,
 >
-> as random users from the entire population will be included in the segment, without any particular user being included too often or too infrequently,
+> as random users from the entire population will be included in the segment, 
+> 
+> without any particular user being included too often or too infrequently,
 >
 > which would be the case with a simpler implementation.
 </sup>
@@ -351,7 +355,7 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
 Есть множество различных вариантов, как можно было бы реализовать этот функционал,
 и в итоге после некоторых раздумий было принято такое решение: 
 <br>
-Попадание в сегмент(или нет) зависит от хеш-функции, которая: 
+Попадание в сегмент(или нет) зависит от функции, которая: 
 
 1. Принимает на вход id пользователя, сегмент, вероятность.
 
@@ -359,10 +363,12 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
 
 3. По формуле, с указанной вероятность, возвращает true или false, причем всегда одинаково.
 
+[Функция](https://github.com/Djama1GIT/avito/blob/d144b24b477f2fa6dc6c8bd130e995de80569267/pkg/utils/utils.go#L26)
 
 Ньюансы: <br>
-1. Количество пользователей попавших в сегмент может изменяться до ~1%
-от (указанной вероятности * количество всех пользователей)
+1. Количество пользователей попавших в сегмент может изменяться до ~1% <br>
+
+    от (указанной вероятности * количество всех пользователей)
 > Я посчитал это допустимым, т.к. это сервис для аналитиков, и тут важнее качество, а не количество
 >
 > А именно благодаря такой функции можно обеспечить максимальную диверсификацию попавших в сегмент пользователей,
@@ -372,6 +378,7 @@ curl -X DELETE http://127.0.0.1:8000/api/users/expired-segments/
 > что определенный пользователь попадает часто в какие-то сегменты, а другой наоборот, 
 >
 > если бы была использована более простая реализация.
+
 </sup>
 
 ```
